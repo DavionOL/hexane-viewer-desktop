@@ -17,9 +17,11 @@ rund 421.000 Mails und 48.700 Dokumente, 281 GB) vorliegen haben.
 
 ## Installation
 
-**Fertiges Programm** (Windows, macOS, Linux): unter *Releases* das Archiv für das eigene System laden, entpacken, `hexane-desk` starten.
-Die Programme sind nicht signiert; Windows (SmartScreen: „Weitere Informationen → Trotzdem ausführen") und macOS (Rechtsklick → „Öffnen",
-oder `xattr -dr com.apple.quarantine hexane-desk`) warnen deshalb.
+**Windows:** unter *Releases* `HexaneDesk-Setup-<Version>.exe` laden und starten. Der Installer benötigt keine Administratorrechte und
+kein vorinstalliertes Python; er prüft Microsoft Edge WebView2 und bietet auf Wunsch OCR (Tesseract, Poppler) an.
+
+**macOS, Linux:** unter *Releases* das Archiv für das eigene System laden, entpacken, `hexane-desk` starten.
+macOS warnt bei nicht signierten Programmen (Rechtsklick → „Öffnen", oder `xattr -dr com.apple.quarantine hexane-desk`).
 
 **Mit Python (3.11 oder neuer):**
 
@@ -27,6 +29,23 @@ oder `xattr -dr com.apple.quarantine hexane-desk`) warnen deshalb.
 pipx install "hexane-desk[desktop,mcp] @ git+https://github.com/DavionOL/hexane-viewer-desktop"
 hexane-desk                 # Desktop-Fenster (ohne pywebview: Browser-Modus)
 hexane-desk serve           # nur lokaler Server, öffnet den Browser
+```
+
+### Download prüfen und Windows-Warnung
+
+Die Programme sind **noch nicht signiert** (eine kostenlose Signierung über die SignPath Foundation ist geplant). Windows zeigt deshalb
+„Unbekannter Herausgeber"/SmartScreen: *„Weitere Informationen" → „Trotzdem ausführen"*. Ob eine Datei unverändert aus dem Build dieses
+Repositories stammt, lässt sich auf zwei Wegen prüfen:
+
+```powershell
+# Windows (PowerShell): Prüfsumme berechnen und mit SHA256SUMS-windows.txt der Release vergleichen
+Get-FileHash .\HexaneDesk-Setup-0.1.0.exe -Algorithm SHA256
+```
+```bash
+# macOS/Linux
+shasum -a 256 -c SHA256SUMS-linux.txt
+# Herkunftsnachweis von GitHub (bestätigt, dass die Datei aus dem Workflow dieses Repositories gebaut wurde):
+gh attestation verify hexane-desk-linux.tar.gz --repo DavionOL/hexane-viewer-desktop
 ```
 
 Optional installierte Programme verbessern Qualität und Tempo, sind aber nicht nötig: **Poppler** (`pdftotext`, schnellere PDF-Erkennung),

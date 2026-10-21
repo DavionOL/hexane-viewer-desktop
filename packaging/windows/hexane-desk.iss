@@ -146,13 +146,15 @@ end;
 function RunTool(const FileName, Params: String; Elevate: Boolean): Boolean;
 var
   ResultCode: Integer;
+  Ok: String;
 begin
   if Elevate then
     Result := ShellExec('runas', FileName, Params, '', SW_SHOWNORMAL, ewWaitUntilTerminated, ResultCode)
   else
     Result := Exec(FileName, Params, '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Result := Result and (ResultCode = 0);
-  Log(Format('%s %s -> %s (Code %d)', [FileName, Params, BoolToStr(Result), ResultCode]));
+  if Result then Ok := 'ok' else Ok := 'Fehler';
+  Log(Format('%s %s -> %s (Code %d)', [FileName, Params, Ok, ResultCode]));
 end;
 
 procedure InstallOcrTools;
