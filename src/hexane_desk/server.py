@@ -81,6 +81,8 @@ async def guard(request: Request, call_next):
     resp = await call_next(request)
     resp.headers["X-Content-Type-Options"] = "nosniff"
     resp.headers["Referrer-Policy"] = "no-referrer"
+    if not request.url.path.startswith("/api/"):
+        resp.headers["Cache-Control"] = "no-cache"            # Oberfläche nach Programmupdates nie veraltet aus dem Browser-Cache
     return resp
 
 
