@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+# Datensatz und Index gehören nie ins Repository
+demo*/
+daten/

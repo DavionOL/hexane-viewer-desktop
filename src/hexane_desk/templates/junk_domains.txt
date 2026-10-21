@@ -1,0 +1,11 @@
+# Eigene Liste unerwünschter Absender (Gruppe "Eigene Liste" im Viewer, standardmäßig ausgeblendet)
+#
+# Hier trägst DU Domains oder einzelne Adressen ein, deren Mails du nicht sehen willst (Werbung, Dienste, Rauschen).
+# Eine Domain oder Adresse pro Zeile, # beginnt einen Kommentar. Beispiele:
+#   werbe-firma.example          (alle Adressen dieser Domain)
+#   newsletter@dienst.example    (nur diese Adresse)
+#
+# Danach das Image neu bauen und "python -m app.junk" ausführen (siehe README).
+# Nichts wird gelöscht: Die Gruppe lässt sich im Viewer jederzeit wieder einblenden, und markierte Mails bleiben sichtbar.
+#
+# Tipp: Vorher in den Mails dieser Domain nachsehen (Suche "von:domain.de"), ob dort wirklich nur Rauschen liegt.

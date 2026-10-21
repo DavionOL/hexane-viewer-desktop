@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hexane Desk</title>
+<style>
+:root{
+  --bg:#f5f6f8; --panel:#fff; --line:#dde1e6; --text:#1c2330; --muted:#6b7585;
+  --accent:#2f6fed; --sel:#e6eefe; --hover:#f0f3f8; --mark:#ffe58a;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#14171c; --panel:#1b1f26; --line:#2b313b; --text:#e4e8ee; --muted:#8a94a4;
+         --accent:#6a9cff; --sel:#243556; --hover:#222833; --mark:#6b5a12; }
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);
+     display:flex;flex-direction:column}
+header{display:flex;gap:10px;align-items:center;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line)}
+header h1{font-size:15px;margin:0 8px 0 0;white-space:nowrap}
+#q{flex:1;min-width:120px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font:inherit}
+#q:focus{outline:2px solid var(--accent);border-color:transparent}
+select,button{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--text);cursor:pointer}
+main{flex:1;display:grid;grid-template-columns:250px 380px 1fr;min-height:0}
+section{overflow:auto;background:var(--panel);border-right:1px solid var(--line);min-height:0}
+#reader{border-right:0}
+/* Ordner */
+#folders{padding:6px 0}
+.f{display:flex;justify-content:space-between;gap:6px;padding:5px 10px 5px calc(10px + var(--d)*14px);cursor:pointer;white-space:nowrap}
+.f:hover{background:var(--hover)} .f.sel{background:var(--sel);font-weight:600}
+.f .n{color:var(--muted);font-size:12px}
+.f .t{overflow:hidden;text-overflow:ellipsis}
+/* Liste */
+.m{padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer}
+.m:hover{background:var(--hover)} .m.sel{background:var(--sel)}
+.m .r1{display:flex;justify-content:space-between;gap:8px}
+.m .from{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m .date{color:var(--muted);font-size:12px;white-space:nowrap}
+.m .subj{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m .prev{color:var(--muted);font-size:12.5px;max-height:2.8em;overflow:hidden}
+mark{background:var(--mark);color:inherit;border-radius:2px}
+#count{padding:8px 12px;color:var(--muted);font-size:12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+#count a{color:var(--accent)}
+/* Lesebereich */
+#reader .empty{margin:80px auto;text-align:center;color:var(--muted)}
+.hd{padding:14px 18px;border-bottom:1px solid var(--line)}
+.hd h2{margin:0 0 8px;font-size:18px}
+.hd .row{color:var(--muted);font-size:13px} .hd .row b{color:var(--text);font-weight:600}
+.hd a{color:var(--accent)}
+.bar{display:flex;gap:8px;padding:8px 18px;border-bottom:1px solid var(--line)}
+.body{padding:16px 18px;white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit}
+iframe{width:100%;height:70vh;border:0;background:#fff}
+.att,.th{padding:10px 18px;border-top:1px solid var(--line)}
+.att a{display:inline-block;margin:2px 10px 2px 0;color:var(--accent);text-decoration:none}
+.th .ti{padding:3px 0;cursor:pointer;color:var(--accent)} .th .ti.cur{color:var(--text);font-weight:600;cursor:default}
+.hint{padding:20px;color:var(--muted)}
+.hint a{color:var(--accent)}
+.tabs{display:flex;gap:4px}
+.tab{border-radius:6px;padding:6px 12px}
+.tab.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+.bar a{text-decoration:none}
+/* Bewertung */
+.sev{display:inline-block;min-width:20px;padding:0 6px;margin-right:6px;border-radius:10px;font-size:12px;font-weight:700;text-align:center;color:#fff}
+.s1{background:#7a8aa0}.s2{background:#b8921a}.s3{background:#d9741a}.s4{background:#d0401f}.s5{background:#9d1030}
+.mk{padding:10px 18px 12px;border-bottom:1px solid var(--line);background:var(--bg)}
+.mk .row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
+.mk .sevbtns{display:flex;gap:6px;align-items:center}
+.mk .sevbtns button{min-width:34px;font-weight:700}
+.mk .sevbtns button.on{color:#fff;border-color:transparent}
+.mk .sevbtns button.on[data-s="1"]{background:#7a8aa0}.mk .sevbtns button.on[data-s="2"]{background:#b8921a}
+.mk .sevbtns button.on[data-s="3"]{background:#d9741a}.mk .sevbtns button.on[data-s="4"]{background:#d0401f}
+.mk .sevbtns button.on[data-s="5"]{background:#9d1030}
+.mk textarea{width:100%;min-height:60px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--text);font:inherit}
+.mk .small{color:var(--muted);font-size:12px}
+.hdrbox table,.tbl{border-collapse:collapse;width:100%}
+.hdrbox td,.tbl td,.tbl th{padding:3px 8px 3px 0;vertical-align:top;font-size:13px;text-align:left}
+.hdrbox td:first-child{color:var(--muted);white-space:nowrap}
+.tbl th{color:var(--muted);font-weight:600}
+.hdrbox ul{margin:6px 0;padding-left:18px}
+pre.raw{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;margin:6px 0 0}
+.bars{display:flex;align-items:flex-end;gap:1px;height:90px;margin:6px 0 2px}
+.bars div{flex:1;min-width:2px;background:var(--accent);border-radius:1px 1px 0 0}
+.pb{display:inline-block;height:8px;background:var(--accent);border-radius:2px;vertical-align:middle}
+.dash{padding:16px 18px}.dash h3{margin:18px 0 6px;font-size:15px}.dash .fig{display:flex;gap:24px;flex-wrap:wrap;margin:8px 0}
+.dash .fig b{display:block;font-size:20px}.dash .fig span{color:var(--muted);font-size:12px}
+main[hidden],#setup[hidden]{display:none !important}
+#setup{flex:1;overflow:auto;padding:16px 24px;background:var(--bg)}
+.setupwrap{max-width:980px;margin:0 auto}
+.setupwrap h2{margin:0 0 4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:12px 0}
+.card h3{margin:0 0 8px;font-size:15px}
+.chk{display:block;margin:6px 0}
+.pbar{height:8px;background:var(--line);border-radius:4px;margin:6px 0;overflow:hidden}.pbar div{height:100%;background:var(--accent)}
+.bad{color:#d0401f}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:50}
+.modal-box{background:var(--panel);border-radius:8px;padding:16px;width:min(560px,92vw);max-height:82vh;display:flex;flex-direction:column}
+.modal-box .list{overflow:auto;border:1px solid var(--line);margin:8px 0;max-height:46vh}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+table.steps td{border-top:1px solid var(--line);padding:8px 10px 8px 0;vertical-align:top}
+@media (max-width:900px){ main{grid-template-columns:1fr} #foldersec{display:none} #reader{display:none} body.read #list{display:none} body.read #reader{display:block} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Hexane Desk</h1>
+  <div class="tabs"><button class="tab sel" data-m="mail">Mails</button><button class="tab" data-m="docs">Dokumente</button><button class="tab" data-m="people">Adressen</button><button class="tab" data-m="marks">Recherche</button><button class="tab" data-m="donations">Spenden</button><button class="tab" data-m="setup">Einrichtung</button></div>
+  <input id="q" type="search" placeholder='Suchen …   von:name  an:name  betreff:wort  hat:anhang  vor:2024-01-31  nach:2024-01-01' autocomplete="off">
+  <select id="sort" title="Sortierung">
+    <option value="date_desc">Neueste zuerst</option>
+    <option value="date_asc">Älteste zuerst</option>
+    <option value="rank">Relevanz</option>
+  </select>
+</header>
+<main>
+  <section id="foldersec"><div id="folders"></div></section>
+  <section id="list"><div id="count"></div><div id="items"></div><div id="more" class="hint" hidden>Lade …</div></section>
+  <section id="reader"><div class="empty">Mail auswählen</div></section>
+</main>
+<section id="setup" hidden></section>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const state = {mode:"mail", folder:"", cat:"", q:"", sort:"date_desc", offset:0, total:0, loading:false, items:[], sel:null};
+const PAGE = 50;
+const SEV = {1:"auffällig", 2:"bedenklich", 3:"gravierend", 4:"schwerwiegend", 5:"kritisch"};
+const VER = {0:"ungeprüft", 1:"Echtheit geprüft", 2:"Echtheit und Kontext geprüft"};
+
+const fmtDate = ts => ts ? new Date(ts*1000).toLocaleString("de-DE",{dateStyle:"medium",timeStyle:"short"}) : "";
+const fmtSize = n => n > 1e6 ? (n/1e6).toFixed(1)+" MB" : n > 1e3 ? Math.round(n/1e3)+" kB" : n+" B";
+const who = (n,a) => n ? `${n} <${a}>` : a;
+const sevBadge = s => s ? `<span class="sev s${s}" title="${SEV[s]}">${s}</span>` : "";
+const rid = m => state.mode === "marks" ? "mk" + m.id : String(m.id);     // Zeilen-ID in der Liste
+
+async function api(url){
+  const r = await fetch(url);
+  if(!r.ok){ let m = r.statusText; try{ m = (await r.json()).detail || m }catch{} throw new Error(m) }
+  return r.json();
+}
+let CATS = null;
+const getCats = async () => CATS ??= await api("/api/categories");
+
+/* Trash-Gruppen: Auswahl wird im Browser gemerkt; ohne gespeicherte Auswahl gelten die Standardwerte des Servers */
+const HIDE_KEY = "hexane.hide";
+const hideState = (() => { try{ return JSON.parse(localStorage.getItem(HIDE_KEY)) || {} }catch{ return {} } })();
+const saveHide = () => { try{ localStorage.setItem(HIDE_KEY, JSON.stringify(hideState)) }catch{} };
+let JUNK = null;
+async function getJunk(){
+  if(!JUNK){
+    JUNK = await api("/api/junk/groups");
+    for(const k of ["mail", "docs"]) if(!Array.isArray(hideState[k])) hideState[k] = JUNK[k].filter(g => g.default).map(g => g.key);
+  }
+  return JUNK;
+}
+
+/* ---------- Ordner und Filter ---------- */
+async function catRows(){
+  const cs = await getCats();
+  return `<div class="hint" style="padding:12px 10px 2px;font-size:12px">Recherche-Filter (anklicken)</div>` +
+    cs.map(c => `<div class="f ${state.cat===c.key?"sel":""}" data-c="${esc(c.key)}" title="${esc(c.desc)}" style="--d:0"><span class="t">${esc(c.label)}</span></div>`).join("");
+}
+async function junkRows(){
+  const J = await getJunk(), on = new Set(hideState[state.mode] || []);
+  return `<div class="hint" style="padding:10px 10px 2px;font-size:12px">Trash ausblenden <a href="#" data-hall="1">${on.size ? "alle zeigen" : "Standard"}</a></div>` +
+    J[state.mode].map(g => `<div class="f" data-h="${esc(g.key)}" title="${esc(g.desc)}" style="--d:0"><span class="t">${on.has(g.key) ? "☑" : "☐"} ${esc(g.label)}</span><span class="n">${g.count.toLocaleString("de-DE")}</span></div>`).join("");
+}
+async function loadFolders(){
+  if(state.mode === "donations"){
+    $("#folders").innerHTML = `<div class="hint" style="font-size:13px">Auswertung der PayPal-Spendenmeldungen. Es werden nur <b>Datum und Betrag</b> gelesen. Namen, Adressen und Texte werden weder gespeichert noch angezeigt.</div>`;
+    return;
+  }
+  if(state.mode === "marks"){
+    const f = await api("/api/marks/facets");
+    const row = (key, label, n) => `<div class="f ${state.folder===key?"sel":""}" data-f="${esc(key)}" style="--d:0"><span class="t">${esc(label)}</span><span class="n">${n}</span></div>`;
+    const head = t => `<div class="hint" style="padding:10px 10px 2px;font-size:12px">${t}</div>`;
+    $("#folders").innerHTML =
+      row("", "Alle Markierungen", f.total) +
+      head("Kritikalität") + [5,4,3,2,1].map(s => row("sev:"+s, `${s} · ${SEV[s]}`, (f.severity.find(x => x.severity === s) || {count:0}).count)).join("") +
+      head("Kategorie") + f.categories.map(c => row("cat:"+c.key, c.label, c.count)).join("") +
+      head("Prüfstatus") + [0,1,2].map(v => row("ver:"+v, VER[v], (f.verified.find(x => x.verified === v) || {count:0}).count)).join("");
+    return;
+  }
+  if(state.mode === "people"){
+    const f = await api("/api/people/domains");
+    const lv = Object.fromEntries(f.levels.map(l => [l.level, l.count]));
+    const row = (key, label, n) => `<div class="f ${state.folder===key?"sel":""}" data-f="${esc(key)}" style="--d:0"><span class="t">${esc(label)}</span><span class="n">${n.toLocaleString("de-DE")}</span></div>`;
+    const head = t => `<div class="hint" style="padding:10px 10px 2px;font-size:12px">${t}</div>`;
+    $("#folders").innerHTML =
+      head("Einzelpersonen") +
+      row("level:1", "Politikerliste (abgeordnetenwatch / manuell)", lv[1] || 0) +
+      row("level:2", "Parteidomain, Funktion unklar", lv[2] || 0) +
+      head("Externe, nur je Domain gezählt") +
+      f.kinds.map(k => row("kind:" + k.kind, k.kind, k.domains)).join("");
+    return;
+  }
+  if(state.mode === "docs"){
+    const [types, genres] = await Promise.all([api("/api/docs/types"), api("/api/docs/genres")]);
+    const row = (key, label, n) => `<div class="f ${state.folder===key?"sel":""}" data-f="${esc(key)}" style="--d:0"><span class="t">${esc(label)}</span><span class="n">${n}</span></div>`;
+    const head = t => `<div class="hint" style="padding:10px 10px 2px;font-size:12px">${t}</div>`;
+    $("#folders").innerHTML = await junkRows() +
+      `<div class="f ${state.folder===""?"sel":""}" data-f="" style="--d:0"><span class="t">Alle Dokumente</span></div>` +
+      (genres.length ? head("Art") + genres.map(g => row("genre:"+g.genre, g.genre.toLowerCase().replace(/_/g," "), g.count)).join("") : "") +
+      head("Dateityp") + types.map(t => row("ext:"+t.ext, t.ext || "(ohne Endung)", t.count)).join("") +
+      await catRows();
+    return;
+  }
+  const rows = await api("/api/folders");
+  const tree = {};
+  for(const {folder,count} of rows){
+    let node = tree, path = [];
+    for(const part of folder.split("/")){
+      path.push(part);
+      node = node[part] ??= {_p:path.join("/"), _n:0, _c:{}};
+      node._n += count; node = node._c;
+    }
+  }
+  let html = `<div class="f ${state.folder===""?"sel":""}" data-f="" style="--d:0"><span class="t">Alle Mails</span></div>`;
+  const walk = (n,d) => { for(const [k,v] of Object.entries(n).sort()){
+    html += `<div class="f ${state.folder===v._p?"sel":""}" data-f="${esc(v._p)}" style="--d:${d}"><span class="t">${esc(k)}</span><span class="n">${v._n}</span></div>`;
+    walk(v._c,d+1);
+  }};
+  walk(tree,0);
+  $("#folders").innerHTML = await junkRows() + html + await catRows();
+}
+$("#folders").addEventListener("click", async e => {
+  const hall = e.target.closest("[data-hall]");
+  if(hall){                                                  // "alle zeigen" bzw. "Standard"
+    e.preventDefault();
+    const J = await getJunk(), m = state.mode;
+    hideState[m] = (hideState[m] || []).length ? [] : J[m].filter(g => g.default).map(g => g.key);
+    saveHide(); loadFolders(); reload(); return;
+  }
+  const f = e.target.closest(".f"); if(!f) return;
+  if(f.dataset.h !== undefined){                             // einzelne Trash-Gruppe an/aus
+    const s = new Set(hideState[state.mode] || []);
+    s.has(f.dataset.h) ? s.delete(f.dataset.h) : s.add(f.dataset.h);
+    hideState[state.mode] = [...s]; saveHide(); loadFolders(); reload(); return;
+  }
+  if(f.dataset.c !== undefined) state.cat = state.cat === f.dataset.c ? "" : f.dataset.c;   // Kategorie-Filter an/aus
+  else state.folder = f.dataset.f;
+  loadFolders(); reload();
+});
+$("#count").addEventListener("click", e => {
+  if(e.target.id === "clearcat"){ e.preventDefault(); state.cat = ""; loadFolders(); reload(); }
+});
+
+/* ---------- Liste ---------- */
+function rowHtml(m){
+  if(state.mode === "marks"){
+    return `<div class="m ${String(state.sel)===rid(m)?"sel":""}" data-id="${rid(m)}">
+      <div class="r1"><span class="from">${sevBadge(m.severity)}${esc(m.title)}</span><span class="date">${m.kind==="mail"?"Mail":"Dokument"}</span></div>
+      <div class="subj" style="font-size:12px;color:var(--muted)">${esc([m.category_label, VER[m.verified]].filter(Boolean).join(" · "))}</div>
+      <div class="prev">${esc(m.note || m.subtitle)}${m.item_id===null?" · (nicht mehr im Index)":""}</div></div>`;
+  }
+  if(state.mode === "people"){
+    const total = (m.n_sent || 0) + (m.n_recv || 0);
+    return `<div class="m ${state.sel===m.id?"sel":""}" data-id="${esc(m.id)}">
+      <div class="r1"><span class="from">${esc(m.name || m.addr)}</span><span class="date">${total.toLocaleString("de-DE")} Mails</span></div>
+      <div class="subj" style="font-size:12px;color:var(--muted)">${esc(m.level===3 ? m.n_addrs + " Adressen · " + m.source : m.addr + (m.n_addrs > 1 ? ` + ${m.n_addrs - 1} weitere` : ""))}</div>
+      <div class="prev">gesendet ${m.n_sent} · empfangen ${m.n_recv}</div></div>`;
+  }
+  if(state.mode === "docs"){
+    const p = m.snip ? esc(m.snip).replace(/\x01/g,"<mark>").replace(/\x02/g,"</mark>") : esc(m.preview);
+    return `<div class="m ${state.sel===m.id?"sel":""}" data-id="${m.id}">
+      <div class="r1"><span class="from">${esc(m.title || m.name)}</span><span class="date">${sevBadge(m.sev)}${esc([m.genre ? m.genre.toLowerCase().replace(/_/g," ") : m.ext, m.doc_date].filter(Boolean).join(" · "))}</span></div>
+      <div class="subj" style="font-size:12px;color:var(--muted)">${esc(m.name)}${m.ocr_status===1?" · Scan ohne Text":""}</div>
+      <div class="prev">${p}</div></div>`;
+  }
+  const prev = m.snip ? esc(m.snip).replace(/\x01/g,"<mark>").replace(/\x02/g,"</mark>") : esc(m.preview);
+  return `<div class="m ${state.sel===m.id?"sel":""}" data-id="${m.id}">
+    <div class="r1"><span class="from">${esc(m.from_name||m.from_addr||"(unbekannt)")}</span><span class="date">${sevBadge(m.sev)}${m.att_count?"📎 ":""}${esc(fmtDate(m.date_ts))}</span></div>
+    <div class="subj">${esc(m.subject||"(kein Betreff)")}</div>
+    <div class="prev">${prev}</div></div>`;
+}
+async function updateCount(total){
+  let h = `${total.toLocaleString("de-DE")} Treffer`;
+  if(state.cat && (state.mode === "mail" || state.mode === "docs")){
+    const c = (await getCats()).find(x => x.key === state.cat);
+    h += ` · Filter: ${esc(c ? c.label : state.cat)} <a href="#" id="clearcat">aufheben</a>`;
+  }
+  if((state.mode === "mail" || state.mode === "docs") && (hideState[state.mode] || []).length) h += " · Trash ausgeblendet";
+  if(state.mode === "marks") h +=` · Export: <a href="/api/marks/export?fmt=md&limit=100" target="_blank">Top 100 (Markdown)</a> · <a href="/api/marks/export?fmt=csv&limit=100">CSV</a>`;
+  $("#count").innerHTML = h;
+}
+async function loadPage(){
+  if(state.loading || (state.offset && state.offset >= state.total)) return;
+  state.loading = true; $("#more").hidden = false;
+  try{
+    const p = new URLSearchParams({q:state.q, folder:state.folder, sort:state.sort, offset:state.offset, limit:PAGE});
+    if(state.cat && (state.mode === "mail" || state.mode === "docs")) p.set("cat", state.cat);
+    if(state.mode === "mail" || state.mode === "docs"){ await getJunk(); p.set("hide", (hideState[state.mode] || []).join(",")); }
+    const base = {people:"/api/people?", docs:"/api/docs?", marks:"/api/marks?"}[state.mode] || "/api/messages?";
+    const d = await api(base + p);
+    state.total = d.total; state.offset += d.items.length; state.items.push(...d.items);
+    $("#items").insertAdjacentHTML("beforeend", d.items.map(rowHtml).join(""));
+    updateCount(d.total);
+    if(!d.items.length && !state.items.length) $("#items").innerHTML = `<div class="hint">${
+      state.mode === "marks" ? "Noch keine Markierungen. Öffne eine Mail oder ein Dokument und bewerte es (Stufe 1–5, Tasten 1–5)."
+      : "Keine " + (state.mode === "people" ? "Adressen" : state.mode === "docs" ? "Dokumente" : "Mails") + " gefunden."}</div>`;
+  }catch(e){ $("#items").insertAdjacentHTML("beforeend", `<div class="hint">${esc(e.message)}</div>`); state.offset = state.total = 0 }
+  state.loading = false; $("#more").hidden = true;
+}
+function reload(){
+  if(state.mode === "donations"){ renderDonations(); return; }
+  state.offset = 0; state.total = 0; state.items = []; $("#items").innerHTML = ""; $("#list").scrollTop = 0;
+  loadPage();
+}
+$("#list").addEventListener("scroll", e => {
+  const l = e.target; if(l.scrollTop + l.clientHeight > l.scrollHeight - 300) loadPage();
+});
+function openItem(m){
+  if(state.mode === "people") return openPerson(m.id);
+  if(state.mode === "docs") return openDoc(m.id);
+  if(state.mode === "marks") return openMark(m);
+  return openMsg(m.id);
+}
+$("#items").addEventListener("click", e => {
+  const el = e.target.closest(".m"); if(!el) return;
+  const m = state.items.find(x => rid(x) === el.dataset.id);
+  if(m) openItem(m);
+});
+
+/* ---------- Bewertung (Mails und Dokumente) ---------- */
+function markPanel(){
+  return `<div class="mk" id="mk">
+    <div class="row2"><b>Bewertung</b> <span id="mk-state" class="small"></span></div>
+    <div class="sevbtns" id="mk-sev">
+      <button data-s="1" title="1 auffällig">1</button><button data-s="2" title="2 bedenklich">2</button>
+      <button data-s="3" title="3 gravierend">3</button><button data-s="4" title="4 schwerwiegend">4</button>
+      <button data-s="5" title="5 kritisch">5</button><button data-s="0" title="Bewertung entfernen (Taste 0)">✕</button>
+    </div>
+    <div class="row2"><select id="mk-cat"></select>
+      <select id="mk-ver"><option value="0">ungeprüft</option><option value="1">Echtheit geprüft</option><option value="2">Echtheit und Kontext geprüft</option></select></div>
+    <textarea id="mk-note" placeholder="Notiz: Was ist das Problem, auf welche Stelle kommt es an, womit ist es belegt …"></textarea>
+    <div class="row2"><button id="mk-save">Notiz speichern</button><span id="mk-msg" class="small"></span></div>
+    <div class="small">1 auffällig · 2 bedenklich · 3 gravierend · 4 schwerwiegend · 5 kritisch. Tasten 1–5 setzen die Stufe, 0 entfernt sie.</div>
+  </div>`;
+}
+async function initMark(kind, id){
+  if(!$("#mk")) return;
+  const cats = await getCats();
+  $("#mk-cat").innerHTML = `<option value="">Kategorie …</option>` + cats.map(c => `<option value="${esc(c.key)}">${esc(c.label)}</option>`).join("");
+  let cur = {severity:0, category:"", note:"", verified:0};
+  try{ const r = await api(`/api/marks/${kind}/${id}`); if(r.mark) cur = r.mark }catch{}
+  const show = () => {
+    document.querySelectorAll("#mk-sev button").forEach(b => b.classList.toggle("on", cur.severity > 0 && +b.dataset.s === cur.severity));
+    $("#mk-cat").value = cur.category || ""; $("#mk-ver").value = String(cur.verified || 0); $("#mk-note").value = cur.note || "";
+    $("#mk-state").textContent = cur.severity ? `bewertet: ${SEV[cur.severity]}` : "noch nicht bewertet";
+  };
+  show();
+  const refreshRow = () => {                       // Liste ohne Neuladen aktuell halten
+    if(state.mode === "marks"){
+      const i = state.items.findIndex(x => x.kind === kind && x.item_id === id);
+      if(i < 0) return;
+      const el = [...document.querySelectorAll(".m")].find(x => x.dataset.id === "mk" + state.items[i].id);
+      if(!cur.severity){ state.items.splice(i, 1); el?.remove(); }
+      else{
+        Object.assign(state.items[i], {severity:cur.severity, category:cur.category, category_label:cur.category_label, note:cur.note, verified:cur.verified});
+        if(el) el.outerHTML = rowHtml(state.items[i]);
+      }
+      loadFolders();
+      return;
+    }
+    const it = state.items.find(x => String(x.id) === String(id));
+    if(!it) return;
+    it.sev = cur.severity || null;
+    const el = [...document.querySelectorAll(".m")].find(x => x.dataset.id === String(id));
+    if(el) el.outerHTML = rowHtml(it);
+  };
+  const save = async sev => {
+    const body = {severity: sev, category: $("#mk-cat").value, note: $("#mk-note").value, verified: +$("#mk-ver").value};
+    $("#mk-msg").textContent = "speichere …";
+    try{
+      const res = await fetch(`/api/marks/${kind}/${id}`, {method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)});
+      if(!res.ok){ let m = res.statusText; try{ m = (await res.json()).detail || m }catch{} throw new Error(m) }
+      cur = (await res.json()).mark || {severity:0, category:"", note:"", verified:0};
+      show(); $("#mk-msg").textContent = "gespeichert"; refreshRow();
+    }catch(e){ $("#mk-msg").textContent = "Fehler: " + e.message }
+  };
+  document.querySelectorAll("#mk-sev button").forEach(b => b.onclick = () => save(+b.dataset.s));
+  $("#mk-cat").onchange = $("#mk-ver").onchange = () => { if(cur.severity) save(cur.severity) };
+  $("#mk-save").onclick = () => cur.severity ? save(cur.severity) : ($("#mk-msg").textContent = "Erst eine Stufe (1–5) wählen");
+}
+
+/* ---------- Lesebereich ---------- */
+async function openMsg(id){
+  state.sel = id;
+  document.querySelectorAll(".m.sel").forEach(x => x.classList.remove("sel"));
+  document.querySelector(`.m[data-id="${id}"]`)?.classList.add("sel");
+  document.body.classList.add("read");
+  const r = $("#reader");
+  try{
+    const m = await api("/api/messages/"+id);
+    const atts = m.attachments.map(a => {
+      const img = /^image\/(png|jpe?g|gif|webp)$/.test(a.content_type);
+      return `<a href="/api/attachments/${a.id}" download>📎 ${esc(a.filename||"Anhang")} (${fmtSize(a.size)})</a>` +
+             (img ? `<a href="/api/attachments/${a.id}?inline=1" target="_blank">Vorschau</a>` : "");
+    }).join("");
+    const th = m.thread.length > 1 ? m.thread.map(t =>
+      `<div class="ti ${t.id===m.id?"cur":""}" data-id="${t.id}">${esc(fmtDate(t.date_ts))} – ${esc(t.from_name||t.from_addr)}: ${esc(t.subject)}</div>`).join("") : "";
+    r.innerHTML = `
+      <div class="hd"><h2>${esc(m.subject||"(kein Betreff)")}</h2>
+        <div class="row"><b>Von:</b> ${esc(who(m.from_name,m.from_addr))}</div>
+        <div class="row"><b>An:</b> ${esc(m.to_addrs)}</div>
+        ${m.cc_addrs?`<div class="row"><b>Cc:</b> ${esc(m.cc_addrs)}</div>`:""}
+        <div class="row"><b>Datum:</b> ${esc(fmtDate(m.date_ts))} · <b>Ordner:</b> ${esc(m.folder)}</div></div>
+      <div class="bar"><button id="back" class="onlymobile">← Liste</button>
+        ${m.has_html?`<button id="tg">HTML-Ansicht</button>`:""}<button id="hdr" title="Header zur Echtheitsprüfung">Header</button></div>
+      ${markPanel()}
+      <div id="hdrbox" class="mk hdrbox" hidden></div>
+      <div id="content" class="body">${esc(m.body_text)}</div>
+      ${atts?`<div class="att">${atts}</div>`:""}
+      ${th?`<div class="th"><b>Verlauf</b>${th}</div>`:""}`;
+    r.scrollTop = 0;
+    $("#back").onclick = () => document.body.classList.remove("read");
+    const tg = $("#tg");
+    if(tg) tg.onclick = () => {
+      const c = $("#content");
+      if(c.tagName === "IFRAME"){ c.outerHTML = `<div id="content" class="body">${esc(m.body_text)}</div>`; tg.textContent = "HTML-Ansicht"; }
+      else { c.outerHTML = `<iframe id="content" sandbox src="/api/messages/${m.id}/html"></iframe>`; tg.textContent = "Textansicht"; }
+    };
+    r.querySelectorAll(".th .ti:not(.cur)").forEach(t => t.onclick = () => openMsg(+t.dataset.id));
+    initMark("mail", id);
+    initHeaders(id);
+  }catch(e){ r.innerHTML = `<div class="empty">${esc(e.message)}</div>` }
+}
+
+/* ---------- Dokumente ---------- */
+async function openDoc(id){
+  state.sel = id;
+  document.querySelectorAll(".m.sel").forEach(x => x.classList.remove("sel"));
+  document.querySelector(`.m[data-id="${id}"]`)?.classList.add("sel");
+  document.body.classList.add("read");
+  const r = $("#reader");
+  try{
+    const d = await api("/api/docs/"+id);
+    const ocr = d.ocr_status===2 ? " · Text per OCR erkannt" : d.ocr_status===1 ? " · <b>Scan ohne Text (OCR ausstehend)</b>" : d.ocr_status===3 ? " · OCR ohne Ergebnis" : "";
+    r.innerHTML = `
+      <div class="hd"><h2>${esc(d.title || d.name)}</h2>
+        <div class="row"><b>Datei:</b> ${esc(d.name)}</div>
+        ${d.genre||d.doc_date||d.source_set?`<div class="row"><b>Art:</b> ${esc(d.genre?d.genre.toLowerCase().replace(/_/g," "):"–")} · <b>Datum:</b> ${esc(d.doc_date||"–")}${d.source_set?` · <b>Herkunft:</b> ${esc(d.source_set)}`:""}</div>`:""}
+        <div class="row"><b>Typ:</b> ${esc(d.ext||"–")} · <b>Größe:</b> ${esc(fmtSize(d.size))}${d.pages?` · <b>Seiten:</b> ${d.pages}`:""}${ocr}</div></div>
+      <div class="bar"><button id="back">← Liste</button>
+        ${d.ext==="pdf"?`<a href="/api/docs/${d.id}/file?inline=1" target="_blank"><button>PDF öffnen</button></a>`:""}
+        <a href="/api/docs/${d.id}/file"><button>Original laden</button></a></div>
+      ${markPanel()}
+      <div class="body">${d.text ? esc(d.text) : "(kein Text extrahiert)"}</div>`;
+    r.scrollTop = 0;
+    $("#back").onclick = () => document.body.classList.remove("read");
+    initMark("doc", id);
+  }catch(e){ r.innerHTML = `<div class="empty">${esc(e.message)}</div>` }
+}
+
+/* ---------- Recherche-Übersicht ---------- */
+async function openMark(m){
+  const sel = () => { state.sel = rid(m); document.querySelectorAll(".m").forEach(x => x.classList.toggle("sel", x.dataset.id === rid(m))); };
+  sel();
+  if(m.item_id === null){
+    $("#reader").innerHTML = `<div class="empty">Dieses Element ist im Index nicht mehr vorhanden.<br><br>${esc(m.title)}<br>${esc(m.note)}</div>`;
+    document.body.classList.add("read");
+    return;
+  }
+  await (m.kind === "mail" ? openMsg : openDoc)(m.item_id);
+  sel();
+}
+
+/* ---------- Adressen ---------- */
+/* ---------- Header (Echtheitsprüfung) ---------- */
+function initHeaders(id){
+  const btn = $("#hdr"), box = $("#hdrbox");
+  if(!btn || !box) return;
+  btn.onclick = async () => {
+    if(!box.hidden){ box.hidden = true; return; }
+    box.hidden = false; box.innerHTML = `<span class="small">lade …</span>`;
+    try{
+      const h = await api(`/api/messages/${id}/headers`);
+      const bad = x => /=(fail|softfail|none|permerror|temperror)$/.test(x);
+      const verdicts = h.auth.verdicts.length
+        ? h.auth.verdicts.map(x => `<span class="sev ${bad(x) ? "s4" : "s1"}">${esc(x)}</span>`).join(" ") : "keine Authentication-Results-Zeile";
+      const dkim = h.dkim.length
+        ? h.dkim.map(x => `${esc(x.domain)} (Selector ${esc(x.selector)})`).join(", ") + (h.dkim_aligned === false ? " – <b>passt nicht zur Absender-Domain</b>" : h.dkim_aligned ? " – passt zur Absender-Domain" : "")
+        : "keine Signatur";
+      box.innerHTML = `
+        <b>Header zur Echtheitsprüfung</b>
+        ${h.hints.length ? `<ul>${h.hints.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : `<div class="small" style="margin:6px 0">Keine Auffälligkeiten bei den einfachen Prüfungen.</div>`}
+        <table><tr><td>Prüfergebnisse</td><td>${verdicts}</td></tr><tr><td>DKIM-Signatur</td><td>${dkim}</td></tr>
+        ${h.fields.map(f => `<tr><td>${esc(f.name)}</td><td>${f.values.map(esc).join("<br>")}</td></tr>`).join("")}</table>
+        ${h.received.length ? `<details style="margin-top:8px"><summary>Zustellweg (${h.received.length} Received-Zeilen, neueste zuerst)</summary>
+          <ol style="margin:6px 0;padding-left:20px;font-size:12.5px">${h.received.map(x => `<li>${esc(x)}</li>`).join("")}</ol></details>` : ""}
+        <details style="margin-top:6px"><summary>Rohtext aller Header</summary><pre class="raw">${esc(h.raw)}</pre></details>
+        <div class="small" style="margin-top:8px">${esc(h.note)}</div>`;
+    }catch(e){ box.innerHTML = `<span class="small">Fehler: ${esc(e.message)}</span>` }
+  };
+}
+
+/* ---------- Person mit mehreren Adressen ---------- */
+const partnersHtml = rows => rows.length
+  ? rows.map(x => `<div class="ti" data-a="${esc(x.addr)}">${esc(x.addr)} <span style="color:var(--muted)">· ${x.n}</span></div>`).join("")
+  : `<div class="hint" style="padding:4px 0">–</div>`;
+const yearsHtml = years => {
+  const maxY = Math.max(1, ...years.map(y => y.n));
+  return years.map(y => `<div style="display:flex;gap:8px;align-items:center"><span style="width:40px">${esc(y.year)}</span>
+    <span class="pb" style="width:${Math.max(2, Math.round(y.n / maxY * 160))}px"></span><span style="color:var(--muted)">${y.n}</span></div>`).join("");
+};
+async function openGroup(key){
+  state.sel = "person:" + key;
+  document.querySelectorAll(".m").forEach(x => x.classList.toggle("sel", x.dataset.id === state.sel));
+  document.body.classList.add("read");
+  const r = $("#reader");
+  try{
+    const p = await api("/api/people/person?key=" + encodeURIComponent(key));
+    const all = p.addresses.map(a => a.addr).join("|");
+    const addrRows = p.addresses.map(a => `<div class="ti" data-a="${esc(a.addr)}">${esc(a.addr)} <span style="color:var(--muted)">· gesendet ${a.n_sent} · empfangen ${a.n_recv}</span></div>`).join("");
+    r.innerHTML = `
+      <div class="hd"><h2>${esc(p.name)}</h2>
+        <div class="row"><b>Einstufung:</b> ${p.sources.map(srcHtml).join("<br>")}</div>
+        <div class="row" style="font-style:italic">Zuordnung nach Name und Parteidomain bzw. nach der manuellen Liste; alle Adressen mit diesem Namen sind zusammengefasst. Namensvettern sind möglich; die Quelle bitte prüfen.</div>
+        <div class="row"><b>Gesendet:</b> ${p.n_sent} · <b>Empfangen:</b> ${p.n_recv} · <b>Adressen:</b> ${p.addresses.length}${p.first_ts?` · <b>Zeitraum:</b> ${esc(fmtDate(p.first_ts))} – ${esc(fmtDate(p.last_ts))}`:""}</div></div>
+      <div class="bar"><button id="back">← Liste</button>
+        <button id="m-from">Mails von dieser Person</button><button id="m-to">Mails an diese Person</button></div>
+      <div class="th"><b>Adressen</b>${addrRows}</div>
+      <div class="th"><b>Schreibt an</b>${partnersHtml(p.to_partners)}</div>
+      <div class="th"><b>Bekommt Mails von</b>${partnersHtml(p.from_partners)}</div>
+      <div class="th"><b>Gesendet pro Jahr</b>${yearsHtml(p.years) || "–"}</div>`;
+    r.scrollTop = 0;
+    $("#back").onclick = () => document.body.classList.remove("read");
+    $("#m-from").onclick = () => setMode("mail", `von:"${all}"`);
+    $("#m-to").onclick = () => setMode("mail", `an:"${all}"`);
+    r.querySelectorAll(".th .ti").forEach(t => t.onclick = () => openPerson(t.dataset.a));
+  }catch(e){ r.innerHTML = `<div class="empty">${esc(e.message)}</div>` }
+}
+
+/* ---------- Spenden-Übersicht (ohne Namen) ---------- */
+async function renderDonations(){
+  const items = $("#items"), r = $("#reader");
+  items.innerHTML = `<div class="hint">Lade …</div>`; $("#count").textContent = "Spenden";
+  try{
+    const d = await api("/api/donations/summary");
+    if(!d.total){
+      items.innerHTML = `<div class="hint">Noch keine Auswertung vorhanden.</div>`;
+      r.innerHTML = `<div class="empty">Auf dem Unraid ausführen:<br><code>python -m app.donations</code></div>`; return;
+    }
+    const n = x => x.toLocaleString("de-DE");
+    const eur = c => (c / 100).toLocaleString("de-DE", {style:"currency", currency:"EUR", maximumFractionDigits: 0});
+    const pct = x => (100 * x / d.total).toFixed(1).replace(".", ",") + " %";
+    const maxM = Math.max(1, ...d.monthly.map(m => m.n)), maxY = Math.max(1, ...d.years.map(y => y.sum)), maxB = Math.max(1, ...d.buckets.map(b => b.n));
+    items.innerHTML = `<div class="dash"><div class="fig"><div><b>${n(d.total)}</b><span>Meldungen</span></div><div><b>${eur(d.sum_cents)}</b><span>Summe lesbarer Beträge</span></div></div>
+      <div class="small" style="color:var(--muted)">Zeitraum ${esc(fmtDate(d.first_ts))} bis ${esc(fmtDate(d.last_ts))}</div></div>`;
+    r.innerHTML = `<div class="dash">
+      <h2 style="margin:0 0 4px">Spendenmeldungen (PayPal)</h2>
+      <div class="fig"><div><b>${n(d.total)}</b><span>Meldungen</span></div><div><b>${n(d.parsed)}</b><span>mit lesbarem Betrag (${pct(d.parsed)})</span></div>
+        <div><b>${eur(d.sum_cents)}</b><span>Summe der lesbaren Beträge</span></div></div>
+      <div class="small" style="color:var(--muted)">Betrag nach Stichwort erkannt: ${n(d.how.kw || 0)} · erster Betrag im Text: ${n(d.how.first || 0)} · nicht lesbar: ${n(d.how.none || 0)}</div>
+      <h3>Pro Jahr</h3>
+      <table class="tbl"><tr><th>Jahr</th><th>Meldungen</th><th>Summe</th><th></th></tr>
+        ${d.years.map(y => `<tr><td>${esc(y.year)}</td><td>${n(y.n)}</td><td>${eur(y.sum)}</td><td><span class="pb" style="width:${Math.round(y.sum / maxY * 220)}px"></span></td></tr>`).join("")}</table>
+      <h3>Pro Monat (Anzahl der Meldungen)</h3>
+      <div class="bars">${d.monthly.map(m => `<div title="${esc(m.month)} · ${m.n} Meldungen · ${eur(m.sum)}" style="height:${Math.max(2, Math.round(m.n / maxM * 90))}px"></div>`).join("")}</div>
+      <div class="small" style="display:flex;justify-content:space-between;color:var(--muted)"><span>${esc(d.monthly[0]?.month || "")}</span><span>${esc(d.monthly.at(-1)?.month || "")}</span></div>
+      <h3>Verteilung der Beträge</h3>
+      <table class="tbl"><tr><th>Klasse</th><th>Anzahl</th><th>Summe</th><th></th></tr>
+        ${d.buckets.map(b => `<tr><td>${esc(b.label)}</td><td>${n(b.n)}</td><td>${eur(b.sum)}</td><td><span class="pb" style="width:${Math.round(b.n / maxB * 220)}px"></span></td></tr>`).join("")}</table>
+      <h3>Häufigste Beträge</h3>
+      <table class="tbl"><tr><th>Betrag</th><th>Anzahl</th></tr>${d.top_amounts.map(a => `<tr><td>${(a.cents / 100).toLocaleString("de-DE", {style:"currency", currency:"EUR"})}</td><td>${n(a.n)}</td></tr>`).join("")}</table>
+      <h3>Tage mit den meisten Meldungen</h3>
+      <table class="tbl"><tr><th>Tag</th><th>Meldungen</th><th>Summe</th></tr>${d.top_days.map(t => `<tr><td>${esc(t.day)}</td><td>${n(t.n)}</td><td>${eur(t.sum)}</td></tr>`).join("")}</table>
+      <div class="small" style="margin-top:18px;color:var(--muted)">Grenzen: Gezählt werden nur PayPal-Spendenmeldungen, keine anderen Zahlungswege. Beträge werden aus dem Meldungstext gelesen (siehe Quote oben), Rückerstattungen und Fremdwährungen werden nicht gesondert behandelt. Die Zahlen sind eine Näherung, keine Buchführung. Auffällige Häufungen sind Anlass zum Nachsehen, kein Beleg.</div>
+    </div>`;
+  }catch(e){ items.innerHTML = `<div class="hint">${esc(e.message)}</div>` }
+}
+
+const srcHtml = s => {
+  const m = (s || "").match(/https?:\/\/[^\s)]+/);
+  return m ? esc(s.replace(m[0], "").trim()) + ` <a href="${esc(m[0])}" target="_blank" rel="noopener noreferrer">Profil öffnen</a>` : esc(s || "");
+};
+async function openPerson(addr){
+  if(String(addr).startsWith("person:")) return openGroup(String(addr).slice(7));
+  state.sel = addr;
+  document.querySelectorAll(".m").forEach(x => x.classList.toggle("sel", x.dataset.id === addr));
+  document.body.classList.add("read");
+  const r = $("#reader");
+  try{
+    const p = await api("/api/people/detail?addr=" + encodeURIComponent(addr));
+    const note = p.level === 1 ? "Zuordnung nach Name und Parteidomain bzw. nach der manuellen Liste. Namensvettern sind möglich; die Quelle bitte prüfen."
+      : p.level === 2 ? "Adresse auf einer Parteidomain, Funktion unklar (Mitarbeiter, Ehrenamt, Shop). Es werden nur Zähler gezeigt."
+      : "Nur Zähler je Domain. Einzeladressen werden bewusst nicht gespeichert.";
+    const partners = rows => rows.length
+      ? rows.map(x => `<div class="ti" data-a="${esc(x.addr)}">${esc(x.addr)} <span style="color:var(--muted)">· ${x.n}</span></div>`).join("")
+      : `<div class="hint" style="padding:4px 0">–</div>`;
+    const maxY = Math.max(1, ...p.years.map(y => y.n));
+    const years = p.years.map(y => `<div style="display:flex;gap:8px;align-items:center"><span style="width:40px">${esc(y.year)}</span>
+      <span style="display:inline-block;height:8px;background:var(--accent);width:${Math.max(2, Math.round(y.n / maxY * 160))}px;border-radius:2px"></span>
+      <span style="color:var(--muted)">${y.n}</span></div>`).join("");
+    const ziel = p.level === 3 ? "dieser Domain" : "dieser Adresse";
+    r.innerHTML = `
+      <div class="hd"><h2>${esc(p.name || p.addr)}</h2>
+        <div class="row">${esc(p.addr)}</div>
+        <div class="row"><b>Einstufung:</b> ${srcHtml(p.source)}</div>
+        <div class="row" style="font-style:italic">${esc(note)}</div>
+        <div class="row"><b>Gesendet:</b> ${p.n_sent} · <b>Empfangen:</b> ${p.n_recv}${p.level===3?` · <b>Adressen:</b> ${p.n_addrs}`:""}${p.first_ts?` · <b>Zeitraum:</b> ${esc(fmtDate(p.first_ts))} – ${esc(fmtDate(p.last_ts))}`:""}</div></div>
+      <div class="bar"><button id="back">← Liste</button>
+        <button id="m-from">Mails von ${ziel}</button><button id="m-to">Mails an ${ziel}</button></div>
+      ${p.level===1 ? `<div class="th"><b>Schreibt an</b>${partners(p.to_partners)}</div>
+        <div class="th"><b>Bekommt Mails von</b>${partners(p.from_partners)}</div>
+        <div class="th"><b>Gesendet pro Jahr</b>${years || "–"}</div>` : ""}`;
+    r.scrollTop = 0;
+    const q = p.addr.replace(/^@/, "");
+    $("#back").onclick = () => document.body.classList.remove("read");
+    $("#m-from").onclick = () => setMode("mail", `von:"${q}"`);
+    $("#m-to").onclick = () => setMode("mail", `an:"${q}"`);
+    r.querySelectorAll(".th .ti").forEach(t => t.onclick = () => openPerson(t.dataset.a));
+  }catch(e){ r.innerHTML = `<div class="empty">${esc(e.message)}</div>` }
+}
+
+function setMode(mode, q){
+  state.mode = mode; state.folder = mode === "people" ? "level:1" : ""; state.cat = ""; state.sel = null;
+  if(q !== undefined){ state.q = q; $("#q").value = q; }
+  if(mode === "people"){ state.sort = "rank"; $("#sort").value = "rank"; }
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("sel", t.dataset.m === mode));
+  stopSetupPoll();
+  document.querySelector("main").hidden = mode === "setup"; $("#setup").hidden = mode !== "setup";
+  if(mode === "setup"){ renderSetup(); return; }
+  $("#q").placeholder = mode === "marks" ? "Markierungen durchsuchen (Titel, Notiz) …"
+    : mode === "people" ? "Name oder Adresse suchen …" : mode === "docs"
+    ? "Dokumente durchsuchen …   art:invoice  ext:pdf  nach:2020-01-01  vor:2022-01-01  quelle:afd"
+    : "Suchen …   von:name  an:name  betreff:wort  hat:anhang  vor:2024-01-31  nach:2024-01-01";
+  $("#reader").innerHTML = `<div class="empty">${mode === "docs" ? "Dokument" : mode === "people" ? "Adresse" : mode === "marks" ? "Markierung" : "Mail"} auswählen</div>`;
+  document.body.classList.remove("read");
+  loadFolders().then(reload);
+}
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => { if(state.mode !== t.dataset.m) setMode(t.dataset.m, "") }));   // Suchsyntax gehört zum Tab: beim Wechsel leeren
+
+/* ---------- Einrichtung ---------- */
+let setupTimer = null;
+const fmtBytes = n => n == null ? "?" : n > 1e12 ? (n/1e12).toFixed(2)+" TB" : n > 1e9 ? (n/1e9).toFixed(1)+" GB" : n > 1e6 ? Math.round(n/1e6)+" MB" : Math.round(n/1e3)+" kB";
+const STATUS_TXT = {"": "offen", done: "fertig", failed: "fehlgeschlagen", cancelled: "abgebrochen", running: "läuft"};
+function stopSetupPoll(){ if(setupTimer){ clearInterval(setupTimer); setupTimer = null } }
+async function postJson(url, body){
+  const r = await fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body || {})});
+  if(!r.ok){ let m = r.statusText; try{ m = (await r.json()).detail || m }catch{} throw new Error(m) }
+  return r.json();
+}
+function stepRow(s, job, running){
+  const live = job && job.status === "running";
+  const status = live ? "running" : (job && job.status === "failed" ? "failed" : s.status);
+  const pct = job && job.total ? Math.round(100 * job.done / job.total) : 0;
+  const cls = status === "done" ? "s1" : status === "failed" ? "s4" : status === "running" ? "s3" : "s2";
+  return `<tr><td><b>${esc(s.label)}</b>${s.optional ? ' <span class="small">(optional)</span>' : ""}<div class="small">${esc(s.desc)}</div>
+    ${live ? `<div class="pbar"><div style="width:${pct}%"></div></div><div class="small">${esc(job.message)}</div>` : ""}
+    ${!s.available && !live ? `<div class="small bad">${esc(s.reason)}</div>` : ""}
+    ${job && job.status === "failed" ? `<div class="small bad">${esc(job.error)}</div>` : ""}</td>
+    <td style="white-space:nowrap"><span class="sev ${cls}">${STATUS_TXT[status] || esc(status)}</span></td>
+    <td><button data-step="${esc(s.key)}" ${(!s.available || running) ? "disabled" : ""}>${s.status === "done" ? "Erneut" : "Starten"}</button></td></tr>`;
+}
+function stepsHtml(st){
+  const ov = st.overview ?? st, running = ov.running;
+  const jall = ov.jobs.all;
+  const label = running === "all" ? "alle empfohlenen Schritte" : ((ov.steps.find(s => s.key === running) || {}).label || "");
+  return `<div class="row2"><button id="run-all" ${(running || !st.configured) ? "disabled" : ""}>Alle empfohlenen Schritte starten</button>
+      <button id="run-cancel" ${running ? "" : "disabled"}>Abbrechen</button><span class="small">${running ? "Es läuft: " + esc(label) : ""}</span></div>
+    <table class="tbl steps">${ov.steps.map(s => stepRow(s, ov.jobs[s.key], running)).join("")}</table>
+    ${jall && (jall.status === "running" || jall.log.length) ? `<div class="small" style="margin-top:8px"><b>Ablauf:</b> ${esc(jall.message)}${jall.status === "failed" ? ` <span class="bad">${esc(jall.error)}</span>` : ""}<pre class="raw">${esc(jall.log.join("\n"))}</pre></div>` : ""}`;
+}
+function wireSteps(){
+  const act = async (fn) => { try{ await fn() }catch(e){ alert(e.message) } refreshSteps() };
+  $("#run-all")?.addEventListener("click", () => act(() => postJson("/api/jobs/start", {step:"all"})));
+  $("#run-cancel")?.addEventListener("click", () => act(() => postJson("/api/jobs/cancel")));
+  document.querySelectorAll("#steps-card [data-step]").forEach(b => b.onclick = () => act(() => postJson("/api/jobs/start", {step:b.dataset.step})));
+}
+async function refreshSteps(){
+  const box = $("#steps-card"); if(!box || $("#setup").hidden) return;
+  try{
+    const [ov, st] = await Promise.all([api("/api/jobs"), api("/api/setup/status")]);
+    box.innerHTML = stepsHtml({overview: ov, configured: st.configured}); wireSteps();
+    if(ov.running && !setupTimer) setupTimer = setInterval(refreshSteps, 1500);
+    if(!ov.running && setupTimer){ stopSetupPoll(); renderSetup() }          // fertig: Übersicht neu laden
+  }catch{}
+}
+async function openFolderBrowser(start){
+  const dlg = document.createElement("div"); dlg.className = "modal"; document.body.appendChild(dlg);
+  let cur = start || "";
+  const load = async p => {
+    try{
+      const d = await api("/api/fs/list?path=" + encodeURIComponent(p)); cur = d.path;
+      dlg.innerHTML = `<div class="modal-box"><h3>Ordner wählen</h3>
+        <div class="small">${esc(d.path)}${d.looks_like_data ? " · <b>sieht nach dem Datensatz aus</b>" : ""}</div>
+        <div class="list">${d.parent ? `<div class="f" style="--d:0" data-p="${esc(d.parent)}">⬆ eine Ebene höher</div>` : ""}
+          ${d.roots.map(r => `<div class="f" style="--d:0" data-p="${esc(r)}">💽 ${esc(r)}</div>`).join("")}
+          ${d.entries.map(e => `<div class="f" style="--d:0" data-p="${esc(e.path)}">📁 ${esc(e.name)}</div>`).join("")}</div>
+        <div class="row2"><button id="fb-ok">Diesen Ordner wählen</button><button id="fb-cancel">Abbrechen</button></div></div>`;
+      dlg.querySelectorAll("[data-p]").forEach(el => el.onclick = () => load(el.dataset.p));
+      $("#fb-cancel").onclick = () => dlg.remove();
+      $("#fb-ok").onclick = () => { $("#dd").value = cur; dlg.remove(); };
+    }catch(e){ dlg.innerHTML = `<div class="modal-box"><div class="bad">${esc(e.message)}</div><button id="fb-cancel">Schließen</button></div>`; $("#fb-cancel").onclick = () => dlg.remove() }
+  };
+  await load(cur);
+}
+async function renderSetup(){
+  const box = $("#setup");
+  let st;
+  try{ st = await api("/api/setup/status") }catch(e){ box.innerHTML = `<div class="hint">${esc(e.message)}</div>`; return }
+  const det = st.detect, ov = st.overview;
+  const partRows = det ? Object.entries(det.parts).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${(v.files || 0).toLocaleString("de-DE")} Dateien</td><td>${fmtBytes(v.bytes)}</td></tr>`).join("") : "";
+  box.innerHTML = `<div class="setupwrap">
+    <h2>Einrichtung</h2>
+    <div class="small">Version ${esc(st.version)} · Alle Daten bleiben auf diesem Rechner.</div>
+    <div class="card"><h3>1. Datenordner</h3>
+      <div class="row2"><input id="dd" style="flex:1;min-width:260px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text)" value="${esc(st.data_dir)}" placeholder="Ordner mit 01_EMAIL, 03_DOCUMENTS …">
+        <button id="dd-pick">Ordner wählen …</button><button id="dd-save">Übernehmen</button></div>
+      <div class="small">Gewählt wird der entpackte Datensatz: der Ordner, in dem <code>01_EMAIL</code>, <code>03_DOCUMENTS</code> usw. liegen. Die Daten werden nur gelesen.</div>
+      <div id="dd-msg"></div>
+      ${det && det.problems.length ? `<ul class="bad">${det.problems.map(p => `<li>${esc(p)}</li>`).join("")}</ul>` : ""}
+      ${partRows ? `<table class="tbl" style="margin-top:8px"><tr><th>Teil</th><th>Umfang</th><th>Größe</th></tr>${partRows}</table>` : ""}
+      ${det && det.tars.length ? `<div class="small">Gepackte Archive im Ordner: ${det.tars.map(t => esc(t.name)).join(", ")}</div>` : ""}
+    </div>
+    <div class="card"><h3>2. Index</h3>
+      <div class="small">Speicherort: <code>${esc(st.index_path)}</code> · aktuell ${fmtBytes(st.index_bytes)} · frei: ${fmtBytes(st.free_bytes)}.
+        Für den vollständigen Datensatz sind rund 6 bis 10 GB und mehrere Stunden Rechenzeit nötig. Jeder Schritt lässt sich abbrechen und später fortsetzen.</div>
+      <label class="chk"><input type="checkbox" id="opt-lists" ${st.settings.lists_consent ? "checked" : ""}> Öffentliche Referenzlisten aus dem Internet laden (abgeordnetenwatch.de, FragDenStaat) für die Einstufung der Adressen</label>
+    </div>
+    <div class="card" id="steps-card"><h3>3. Schritte</h3><div id="steps-body"></div></div>
+    <div class="card"><h3>Optionale Hilfsprogramme</h3>
+      <div>${Object.entries(ov.capabilities).map(([k, v]) => `<span class="sev ${v ? "s1" : "s3"}">${v ? "✓" : "✗"} ${esc(k)}</span>`).join(" ")}</div>
+      <div class="small">Ohne diese Programme nutzt Hexane Desk eingebaute Verfahren. pdftotext/pdftoppm (Poppler) beschleunigen die PDF-Erkennung, tesseract ermöglicht OCR für Scans, catdoc liest alte .doc/.xls-Dateien.</div>
+    </div>
+    <div class="card"><h3>KI-Anbindung (MCP)</h3>
+      <div class="small">Ein KI-Client (zum Beispiel Claude Desktop) kann sich über MCP mit diesem Programm verbinden und im lokalen Index suchen. <b>Inhalte gehen dabei an das Modell des Clients.</b></div>
+      <label class="chk"><input type="checkbox" id="opt-mask" ${st.settings.mask_external ? "checked" : ""}> Adressen Außenstehender in den Antworten maskieren (empfohlen)</label>
+      <label class="chk"><input type="checkbox" id="opt-write" ${st.settings.allow_write ? "checked" : ""}> Schreib-Werkzeuge erlauben (Markierungen setzen)</label>
+      <div class="small">Diesen Eintrag in die Konfiguration des KI-Clients einfügen (bei Claude Desktop: Einstellungen, Entwickler, Konfiguration bearbeiten) und den Client neu starten:</div>
+      <pre class="raw">${esc(JSON.stringify(st.mcp_config, null, 2))}</pre>
+    </div>
+    <div class="small">Eigene Listen (<code>junk_domains.txt</code>, <code>extra_public_figures.txt</code>) liegen in <code>${esc(st.lists_dir)}</code>.</div></div>`;
+  $("#steps-body").innerHTML = stepsHtml(st); wireSteps();
+  const setOpt = (id, key) => $(id).onchange = async e => { try{ await postJson("/api/setup/config", {[key]: e.target.checked}) }catch(x){ alert(x.message) } };
+  setOpt("#opt-lists", "lists_consent"); setOpt("#opt-mask", "mask_external"); setOpt("#opt-write", "allow_write");
+  $("#dd-pick").onclick = async () => {
+    const native = window.pywebview && window.pywebview.api && window.pywebview.api.choose_folder;
+    if(native){ const p = await window.pywebview.api.choose_folder(); if(p) $("#dd").value = p }
+    else openFolderBrowser($("#dd").value);
+  };
+  $("#dd-save").onclick = async () => {
+    try{ await postJson("/api/setup/config", {data_dir: $("#dd").value.trim()}); renderSetup() }
+    catch(e){ $("#dd-msg").innerHTML = `<div class="bad">${esc(e.message)}</div>` }
+  };
+  if(ov.running && !setupTimer) setupTimer = setInterval(refreshSteps, 1500);
+}
+
+/* ---------- Suche & Tastatur ---------- */
+let timer;
+$("#q").addEventListener("input", e => { clearTimeout(timer); timer = setTimeout(() => { state.q = e.target.value.trim(); reload() }, 300) });
+$("#sort").addEventListener("change", e => { state.sort = e.target.value; reload() });
+document.addEventListener("keydown", e => {
+  if(e.target.matches?.("input,select,textarea")) { if(e.key==="Escape") e.target.blur(); return }
+  if(e.ctrlKey || e.metaKey || e.altKey) return;
+  if(e.key === "/"){ e.preventDefault(); $("#q").focus(); return }
+  if(/^[0-5]$/.test(e.key) && $("#mk")){ document.querySelector(`#mk-sev button[data-s="${e.key}"]`)?.click(); return }
+  if(e.key === "j" || e.key === "k"){
+    const i = state.items.findIndex(m => rid(m) === String(state.sel));
+    const n = state.items[e.key === "j" ? i+1 : Math.max(i-1,0)];
+    if(n){
+      openItem(n);
+      [...document.querySelectorAll(".m")].find(x => x.dataset.id === rid(n))?.scrollIntoView({block:"nearest"});
+    }
+  }
+});
+
+async function init(){
+  try{
+    const st = await api("/api/setup/status");
+    if(!st.configured || (!st.counts.mails && !st.counts.docs)){ setMode("setup"); return }
+  }catch{}
+  loadFolders().then(reload);
+}
+init();
+</script>
+</body>
+</html>

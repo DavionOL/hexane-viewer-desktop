@@ -1,0 +1,14 @@
+# Manuell ergänzte öffentliche Personen (Politiker-Sicht im Viewer, Stufe "öffentliche Person")
+#
+# Hier trägst DU Personen ein, die sich selbst öffentlich politisch äußern oder auftreten (z. B. Influencer),
+# aber in keiner Mandatsträgerliste stehen. Es gibt dafür keine amtliche Liste, deshalb wird nichts
+# automatisch erraten und nichts aus Mailinhalten abgeleitet.
+# Aufnehmen sollte man nur Menschen, deren öffentliche Rolle belegbar ist (Kanal, Auftritte, Kandidatur).
+#
+# Format, eine Person pro Zeile:   Anzeigename | Notiz/Quelle | optionale Adressen, durch Komma getrennt
+# Der Abgleich läuft über den Namen (und die Adressen, falls angegeben); Zeilen mit # werden ignoriert.
+#
+# Beispiele:
+# Vorname Nachname | eigener Kanal, öffentlich politisch aktiv | vorname@example.org, kontakt@example.org
+
+Tim Kellner | Influencer, vom Nutzer genannt |
