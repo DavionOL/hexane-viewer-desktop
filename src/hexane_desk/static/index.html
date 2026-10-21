@@ -6,34 +6,43 @@
 <title>Hexane Desk</title>
 <style>
 :root{
-  --bg:#f5f6f8; --panel:#fff; --line:#dde1e6; --text:#1c2330; --muted:#6b7585;
-  --accent:#2f6fed; --sel:#e6eefe; --hover:#f0f3f8; --mark:#ffe58a;
+  --bg:#f6f8fc; --panel:#fff; --line:#e3e7ed; --text:#1f1f1f; --muted:#5f6368;
+  --accent:#0b57d0; --sel:#d3e3fd; --hover:#f1f4f9; --mark:#ffe58a; --search:#eaf1fb; --shadow:0 1px 3px rgba(60,64,67,.18);
 }
 @media (prefers-color-scheme: dark){
-  :root{ --bg:#14171c; --panel:#1b1f26; --line:#2b313b; --text:#e4e8ee; --muted:#8a94a4;
-         --accent:#6a9cff; --sel:#243556; --hover:#222833; --mark:#6b5a12; }
+  :root{ --bg:#131314; --panel:#1e1f20; --line:#303134; --text:#e3e3e3; --muted:#9aa0a6;
+         --accent:#a8c7fa; --sel:#2b4a7d; --hover:#292a2d; --mark:#6b5a12; --search:#2b2c2f; --shadow:0 1px 3px rgba(0,0,0,.5); }
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);
+body{font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);
      display:flex;flex-direction:column}
-header{display:flex;gap:10px;align-items:center;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line)}
-header h1{font-size:15px;margin:0 8px 0 0;white-space:nowrap}
-#q{flex:1;min-width:120px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text);font:inherit}
-#q:focus{outline:2px solid var(--accent);border-color:transparent}
-select,button{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--text);cursor:pointer}
-main{flex:1;display:grid;grid-template-columns:250px 380px 1fr;min-height:0}
-section{overflow:auto;background:var(--panel);border-right:1px solid var(--line);min-height:0}
+header{display:flex;gap:14px;align-items:center;padding:8px 16px 6px}
+.brand{display:flex;align-items:center;gap:10px;min-width:206px;font-size:20px;color:var(--muted)}
+.brand svg{width:34px;height:34px}
+#q{flex:1;max-width:760px;min-width:120px;height:46px;padding:0 20px;border:0;border-radius:24px;background:var(--search);color:var(--text);font:inherit;font-size:15px}
+#q:focus{outline:0;background:var(--panel);box-shadow:var(--shadow)}
+select,button{font:inherit;padding:6px 12px;border:1px solid var(--line);border-radius:18px;background:var(--panel);color:var(--text);cursor:pointer}
+button:hover,select:hover{background:var(--hover)}
+.shell{flex:1;display:flex;min-height:0;gap:0}
+nav.rail{width:84px;flex:none;display:flex;flex-direction:column;gap:4px;padding:6px 0;align-items:center}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;width:68px;padding:6px 2px;border:0;border-radius:16px;background:none;font-size:11.5px;color:var(--muted)}
+.tab .ic{display:flex;align-items:center;justify-content:center;width:56px;height:32px;border-radius:16px;font-size:18px}
+.tab:hover{background:none}.tab:hover .ic{background:var(--hover)}
+.tab.sel{color:var(--text);font-weight:600}.tab.sel .ic{background:var(--sel)}
+main{flex:1;display:grid;grid-template-columns:230px minmax(320px,420px) 1fr;gap:10px;min-height:0;padding:0 10px 10px 0}
+section{overflow:auto;background:var(--panel);border-radius:16px;min-height:0}
+#foldersec{background:none}
 #reader{border-right:0}
 /* Ordner */
 #folders{padding:6px 0}
-.f{display:flex;justify-content:space-between;gap:6px;padding:5px 10px 5px calc(10px + var(--d)*14px);cursor:pointer;white-space:nowrap}
+.f{display:flex;justify-content:space-between;gap:6px;padding:5px 12px 5px calc(14px + var(--d)*14px);cursor:pointer;white-space:nowrap;border-radius:0 16px 16px 0;margin-right:8px}
 .f:hover{background:var(--hover)} .f.sel{background:var(--sel);font-weight:600}
 .f .n{color:var(--muted);font-size:12px}
 .f .t{overflow:hidden;text-overflow:ellipsis}
 /* Liste */
-.m{padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer}
-.m:hover{background:var(--hover)} .m.sel{background:var(--sel)}
+.m{padding:10px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.m:hover{background:var(--hover);box-shadow:var(--shadow)} .m.sel{background:var(--sel)}
 .m .r1{display:flex;justify-content:space-between;gap:8px}
 .m .from{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .m .date{color:var(--muted);font-size:12px;white-space:nowrap}
@@ -56,9 +65,6 @@ iframe{width:100%;height:70vh;border:0;background:#fff}
 .th .ti{padding:3px 0;cursor:pointer;color:var(--accent)} .th .ti.cur{color:var(--text);font-weight:600;cursor:default}
 .hint{padding:20px;color:var(--muted)}
 .hint a{color:var(--accent)}
-.tabs{display:flex;gap:4px}
-.tab{border-radius:6px;padding:6px 12px}
-.tab.sel{background:var(--accent);border-color:var(--accent);color:#fff}
 .bar a{text-decoration:none}
 /* Bewertung */
 .sev{display:inline-block;min-width:20px;padding:0 6px;margin-right:6px;border-radius:10px;font-size:12px;font-weight:700;text-align:center;color:#fff}
@@ -85,10 +91,10 @@ pre.raw{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.4 ui-monospace,S
 .dash{padding:16px 18px}.dash h3{margin:18px 0 6px;font-size:15px}.dash .fig{display:flex;gap:24px;flex-wrap:wrap;margin:8px 0}
 .dash .fig b{display:block;font-size:20px}.dash .fig span{color:var(--muted);font-size:12px}
 main[hidden],#setup[hidden]{display:none !important}
-#setup{flex:1;overflow:auto;padding:16px 24px;background:var(--bg)}
+#setup{flex:1;overflow:auto;padding:16px 24px;margin:0 10px 10px 0;border-radius:16px;background:var(--panel)}
 .setupwrap{max-width:980px;margin:0 auto}
 .setupwrap h2{margin:0 0 4px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:12px 0}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:12px 16px;margin:12px 0}
 .card h3{margin:0 0 8px;font-size:15px}
 .chk{display:block;margin:6px 0}
 .pbar{height:8px;background:var(--line);border-radius:4px;margin:6px 0;overflow:hidden}.pbar div{height:100%;background:var(--accent)}
@@ -98,13 +104,12 @@ main[hidden],#setup[hidden]{display:none !important}
 .modal-box .list{overflow:auto;border:1px solid var(--line);margin:8px 0;max-height:46vh}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
 table.steps td{border-top:1px solid var(--line);padding:8px 10px 8px 0;vertical-align:top}
-@media (max-width:900px){ main{grid-template-columns:1fr} #foldersec{display:none} #reader{display:none} body.read #list{display:none} body.read #reader{display:block} }
+@media (max-width:900px){ nav.rail{display:none} .brand span{display:none} .brand{min-width:0} main{grid-template-columns:1fr;padding:0 10px 10px} #foldersec{display:none} #reader{display:none} body.read #list{display:none} body.read #reader{display:block} }
 </style>
 </head>
 <body>
 <header>
-  <h1>Hexane Desk</h1>
-  <div class="tabs"><button class="tab sel" data-m="mail">Mails</button><button class="tab" data-m="docs">Dokumente</button><button class="tab" data-m="people">Adressen</button><button class="tab" data-m="marks">Recherche</button><button class="tab" data-m="donations">Spenden</button><button class="tab" data-m="setup">Einrichtung</button></div>
+  <div class="brand"><svg viewBox="0 0 128 128" aria-hidden="true"><rect width="128" height="128" rx="26" fill="#1f3a5f"/><circle cx="54" cy="54" r="26" fill="none" stroke="#fff" stroke-width="10"/><path d="M74 74 L102 102" stroke="#fff" stroke-width="12" stroke-linecap="round"/></svg><span>Hexane Desk</span></div>
   <input id="q" type="search" placeholder='Suchen …   von:name  an:name  betreff:wort  hat:anhang  vor:2024-01-31  nach:2024-01-01' autocomplete="off">
   <select id="sort" title="Sortierung">
     <option value="date_desc">Neueste zuerst</option>
@@ -112,12 +117,22 @@ table.steps td{border-top:1px solid var(--line);padding:8px 10px 8px 0;vertical-
     <option value="rank">Relevanz</option>
   </select>
 </header>
+<div class="shell">
+<nav class="rail">
+  <button class="tab sel" data-m="mail"><span class="ic">✉</span>Mails</button>
+  <button class="tab" data-m="docs"><span class="ic">📄</span>Dokumente</button>
+  <button class="tab" data-m="people"><span class="ic">👥</span>Adressen</button>
+  <button class="tab" data-m="marks"><span class="ic">⭐</span>Recherche</button>
+  <button class="tab" data-m="donations"><span class="ic">📊</span>Spenden</button>
+  <button class="tab" data-m="setup"><span class="ic">⚙</span>Einrichtung</button>
+</nav>
 <main>
   <section id="foldersec"><div id="folders"></div></section>
   <section id="list"><div id="count"></div><div id="items"></div><div id="more" class="hint" hidden>Lade …</div></section>
   <section id="reader"><div class="empty">Mail auswählen</div></section>
 </main>
 <section id="setup" hidden></section>
+</div>
 
 <script>
 const $ = s => document.querySelector(s);
