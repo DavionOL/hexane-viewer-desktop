@@ -18,22 +18,28 @@ html,body{height:100%;margin:0}
 body{font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);
      display:flex;flex-direction:column}
 header{display:flex;gap:14px;align-items:center;padding:8px 16px 6px}
-.brand{display:flex;align-items:center;gap:10px;min-width:206px;font-size:20px;color:var(--muted)}
+#menu{width:40px;height:40px;padding:0;border:0;border-radius:50%;background:none;font-size:20px;color:var(--muted)}
+.brand{display:flex;align-items:center;gap:10px;min-width:190px;font-size:20px;color:var(--muted)}
 .brand svg{width:34px;height:34px}
 #q{flex:1;max-width:760px;min-width:120px;height:46px;padding:0 20px;border:0;border-radius:24px;background:var(--search);color:var(--text);font:inherit;font-size:15px}
 #q:focus{outline:0;background:var(--panel);box-shadow:var(--shadow)}
 select,button{font:inherit;padding:6px 12px;border:1px solid var(--line);border-radius:18px;background:var(--panel);color:var(--text);cursor:pointer}
 button:hover,select:hover{background:var(--hover)}
-.shell{flex:1;display:flex;min-height:0;gap:0}
-nav.rail{width:84px;flex:none;display:flex;flex-direction:column;gap:4px;padding:6px 0;align-items:center}
-.tab{display:flex;flex-direction:column;align-items:center;gap:2px;width:68px;padding:6px 2px;border:0;border-radius:16px;background:none;font-size:11.5px;color:var(--muted)}
-.tab .ic{display:flex;align-items:center;justify-content:center;width:56px;height:32px;border-radius:16px;font-size:18px}
-.tab:hover{background:none}.tab:hover .ic{background:var(--hover)}
-.tab.sel{color:var(--text);font-weight:600}.tab.sel .ic{background:var(--sel)}
-main{flex:1;display:grid;grid-template-columns:230px minmax(320px,420px) 1fr;gap:10px;min-height:0;padding:0 10px 10px 0}
+.shell{flex:1;display:flex;min-height:0}
+#side{width:290px;flex:none;overflow:auto;padding:4px 8px 12px 8px}
+body.noside #side{display:none}
+nav.rail{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+.tab{display:flex;align-items:center;gap:16px;width:100%;padding:0 16px;height:38px;border:0;border-radius:19px;background:none;font-size:14px;color:var(--text);text-align:left}
+.tab .ic{width:24px;text-align:center;font-size:17px}
+.tab .lb{flex:1}.tab .cnt{color:var(--muted);font-size:12px}
+.tab:hover{background:var(--hover)}
+.tab.sel{background:var(--sel);font-weight:600}
+#folders .hint{font-size:14px !important;font-weight:600;color:var(--text);padding:14px 16px 4px !important}
+main{flex:1;position:relative;min-height:0;margin:0 12px 12px 0}
 section{overflow:auto;background:var(--panel);border-radius:16px;min-height:0}
-#foldersec{background:none}
-#reader{border-right:0}
+#list,#reader{position:absolute;inset:0}
+#reader{display:none;border-right:0}
+body.read #reader{display:block} body.read #list{display:none}
 /* Ordner */
 #folders{padding:6px 0}
 .f{display:flex;justify-content:space-between;gap:6px;padding:5px 12px 5px calc(14px + var(--d)*14px);cursor:pointer;white-space:nowrap;border-radius:0 16px 16px 0;margin-right:8px}
@@ -41,16 +47,19 @@ section{overflow:auto;background:var(--panel);border-radius:16px;min-height:0}
 .f .n{color:var(--muted);font-size:12px}
 .f .t{overflow:hidden;text-overflow:ellipsis}
 /* Liste */
-.m{padding:10px 16px;border-bottom:1px solid var(--line);cursor:pointer}
-.m:hover{background:var(--hover);box-shadow:var(--shadow)} .m.sel{background:var(--sel)}
-.m .r1{display:flex;justify-content:space-between;gap:8px}
-.m .from{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.m .date{color:var(--muted);font-size:12px;white-space:nowrap}
-.m .subj{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.m .prev{color:var(--muted);font-size:12.5px;max-height:2.8em;overflow:hidden}
-mark{background:var(--mark);color:inherit;border-radius:2px}
-#count{padding:8px 12px;color:var(--muted);font-size:12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+#toolbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+#refresh{width:36px;height:36px;padding:0;border:0;border-radius:50%;background:none;font-size:18px;color:var(--muted)}
+#count{flex:1;text-align:right;color:var(--muted);font-size:12.5px}
 #count a{color:var(--accent)}
+.m{display:grid;grid-template-columns:210px minmax(0,1fr) auto;gap:16px;align-items:center;min-height:46px;padding:6px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.m:hover{background:var(--hover);box-shadow:var(--shadow);position:relative} .m.sel{background:var(--sel)}
+.m .r1{display:contents}
+.m .from{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m .mid{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m .subj{font-weight:600}
+.m .prev{color:var(--muted)}
+.m .date{color:var(--muted);font-size:12.5px;white-space:nowrap;text-align:right}
+mark{background:var(--mark);color:inherit;border-radius:2px}
 /* Lesebereich */
 #reader .empty{margin:80px auto;text-align:center;color:var(--muted)}
 .hd{padding:14px 18px;border-bottom:1px solid var(--line)}
@@ -67,8 +76,9 @@ iframe{width:100%;height:70vh;border:0;background:#fff}
 .hint a{color:var(--accent)}
 .bar a{text-decoration:none}
 /* Bewertung */
-.sev{display:inline-block;min-width:20px;padding:0 6px;margin-right:6px;border-radius:10px;font-size:12px;font-weight:700;text-align:center;color:#fff}
-.s1{background:#7a8aa0}.s2{background:#b8921a}.s3{background:#d9741a}.s4{background:#d0401f}.s5{background:#9d1030}
+.sev{--c:#7a8aa0;display:inline-block;padding:0 8px;margin-right:8px;border-radius:8px;font-size:12px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent)}
+.sev::before{content:"● "}
+.s1{--c:#6b7a90}.s2{--c:#a47d0c}.s3{--c:#cc6a12}.s4{--c:#d0401f}.s5{--c:#b0123a}
 .mk{padding:10px 18px 12px;border-bottom:1px solid var(--line);background:var(--bg)}
 .mk .row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
 .mk .sevbtns{display:flex;gap:6px;align-items:center}
@@ -104,11 +114,12 @@ main[hidden],#setup[hidden]{display:none !important}
 .modal-box .list{overflow:auto;border:1px solid var(--line);margin:8px 0;max-height:46vh}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
 table.steps td{border-top:1px solid var(--line);padding:8px 10px 8px 0;vertical-align:top}
-@media (max-width:900px){ nav.rail{display:none} .brand span{display:none} .brand{min-width:0} main{grid-template-columns:1fr;padding:0 10px 10px} #foldersec{display:none} #reader{display:none} body.read #list{display:none} body.read #reader{display:block} }
+@media (max-width:900px){ #side{display:none} body:not(.noside) #side{display:none} .brand span{display:none} .brand{min-width:0} .m{grid-template-columns:1fr auto} .m .mid{grid-column:1/-1;order:3} .m .date{order:2} }
 </style>
 </head>
 <body>
 <header>
+  <button id="menu" title="Seitenleiste ein-/ausblenden" aria-label="Menü">☰</button>
   <div class="brand"><svg viewBox="0 0 128 128" aria-hidden="true"><rect width="128" height="128" rx="26" fill="#1f3a5f"/><circle cx="54" cy="54" r="26" fill="none" stroke="#fff" stroke-width="10"/><path d="M74 74 L102 102" stroke="#fff" stroke-width="12" stroke-linecap="round"/></svg><span>Hexane Desk</span></div>
   <input id="q" type="search" placeholder='Suchen …   von:name  an:name  betreff:wort  hat:anhang  vor:2024-01-31  nach:2024-01-01' autocomplete="off">
   <select id="sort" title="Sortierung">
@@ -118,17 +129,19 @@ table.steps td{border-top:1px solid var(--line);padding:8px 10px 8px 0;vertical-
   </select>
 </header>
 <div class="shell">
-<nav class="rail">
-  <button class="tab sel" data-m="mail"><span class="ic">✉</span>Mails</button>
-  <button class="tab" data-m="docs"><span class="ic">📄</span>Dokumente</button>
-  <button class="tab" data-m="people"><span class="ic">👥</span>Adressen</button>
-  <button class="tab" data-m="marks"><span class="ic">⭐</span>Recherche</button>
-  <button class="tab" data-m="donations"><span class="ic">📊</span>Spenden</button>
-  <button class="tab" data-m="setup"><span class="ic">⚙</span>Einrichtung</button>
-</nav>
+<aside id="side">
+  <nav class="rail">
+    <button class="tab sel" data-m="mail"><span class="ic">✉</span><span class="lb">Mails</span><span class="cnt" id="cnt-mail"></span></button>
+    <button class="tab" data-m="docs"><span class="ic">📄</span><span class="lb">Dokumente</span></button>
+    <button class="tab" data-m="people"><span class="ic">👥</span><span class="lb">Adressen</span></button>
+    <button class="tab" data-m="marks"><span class="ic">⭐</span><span class="lb">Recherche</span></button>
+    <button class="tab" data-m="donations"><span class="ic">📊</span><span class="lb">Spenden</span></button>
+    <button class="tab" data-m="setup"><span class="ic">⚙</span><span class="lb">Einrichtung</span></button>
+  </nav>
+  <div id="folders"></div>
+</aside>
 <main>
-  <section id="foldersec"><div id="folders"></div></section>
-  <section id="list"><div id="count"></div><div id="items"></div><div id="more" class="hint" hidden>Lade …</div></section>
+  <section id="list"><div id="toolbar"><button id="refresh" title="Neu laden" aria-label="Neu laden">↻</button><div id="count"></div></div><div id="items"></div><div id="more" class="hint" hidden>Lade …</div></section>
   <section id="reader"><div class="empty">Mail auswählen</div></section>
 </main>
 <section id="setup" hidden></section>
@@ -264,29 +277,29 @@ $("#count").addEventListener("click", e => {
 function rowHtml(m){
   if(state.mode === "marks"){
     return `<div class="m ${String(state.sel)===rid(m)?"sel":""}" data-id="${rid(m)}">
-      <div class="r1"><span class="from">${sevBadge(m.severity)}${esc(m.title)}</span><span class="date">${m.kind==="mail"?"Mail":"Dokument"}</span></div>
-      <div class="subj" style="font-size:12px;color:var(--muted)">${esc([m.category_label, VER[m.verified]].filter(Boolean).join(" · "))}</div>
-      <div class="prev">${esc(m.note || m.subtitle)}${m.item_id===null?" · (nicht mehr im Index)":""}</div></div>`;
+      <div class="r1"><span class="from">${esc(m.title)}</span>
+      <span class="mid">${sevBadge(m.severity)}<span class="subj">${esc([m.category_label, VER[m.verified]].filter(Boolean).join(" · "))}</span><span class="prev"> – ${esc(m.note || m.subtitle)}${m.item_id===null?" · (nicht mehr im Index)":""}</span></span>
+      <span class="date">${m.kind==="mail"?"Mail":"Dokument"}</span></div></div>`;
   }
   if(state.mode === "people"){
     const total = (m.n_sent || 0) + (m.n_recv || 0);
     return `<div class="m ${state.sel===m.id?"sel":""}" data-id="${esc(m.id)}">
-      <div class="r1"><span class="from">${esc(m.name || m.addr)}</span><span class="date">${total.toLocaleString("de-DE")} Mails</span></div>
-      <div class="subj" style="font-size:12px;color:var(--muted)">${esc(m.level===3 ? m.n_addrs + " Adressen · " + m.source : m.addr + (m.n_addrs > 1 ? ` + ${m.n_addrs - 1} weitere` : ""))}</div>
-      <div class="prev">gesendet ${m.n_sent} · empfangen ${m.n_recv}</div></div>`;
+      <div class="r1"><span class="from">${esc(m.name || m.addr)}</span>
+      <span class="mid"><span class="subj">${esc(m.level===3 ? m.n_addrs + " Adressen · " + m.source : m.addr + (m.n_addrs > 1 ? ` + ${m.n_addrs - 1} weitere` : ""))}</span><span class="prev"> – gesendet ${m.n_sent} · empfangen ${m.n_recv}</span></span>
+      <span class="date">${total.toLocaleString("de-DE")} Mails</span></div></div>`;
   }
   if(state.mode === "docs"){
     const p = m.snip ? esc(m.snip).replace(/\x01/g,"<mark>").replace(/\x02/g,"</mark>") : esc(m.preview);
     return `<div class="m ${state.sel===m.id?"sel":""}" data-id="${m.id}">
-      <div class="r1"><span class="from">${esc(m.title || m.name)}</span><span class="date">${sevBadge(m.sev)}${esc([m.genre ? m.genre.toLowerCase().replace(/_/g," ") : m.ext, m.doc_date].filter(Boolean).join(" · "))}</span></div>
-      <div class="subj" style="font-size:12px;color:var(--muted)">${esc(m.name)}${m.ocr_status===1?" · Scan ohne Text":""}</div>
-      <div class="prev">${p}</div></div>`;
+      <div class="r1"><span class="from">${esc(m.title || m.name)}</span>
+      <span class="mid">${sevBadge(m.sev)}<span class="subj">${esc(m.name)}${m.ocr_status===1?" · Scan ohne Text":""}</span><span class="prev"> – ${p}</span></span>
+      <span class="date">${esc([m.genre ? m.genre.toLowerCase().replace(/_/g," ") : m.ext, m.doc_date].filter(Boolean).join(" · "))}</span></div></div>`;
   }
   const prev = m.snip ? esc(m.snip).replace(/\x01/g,"<mark>").replace(/\x02/g,"</mark>") : esc(m.preview);
   return `<div class="m ${state.sel===m.id?"sel":""}" data-id="${m.id}">
-    <div class="r1"><span class="from">${esc(m.from_name||m.from_addr||"(unbekannt)")}</span><span class="date">${sevBadge(m.sev)}${m.att_count?"📎 ":""}${esc(fmtDate(m.date_ts))}</span></div>
-    <div class="subj">${esc(m.subject||"(kein Betreff)")}</div>
-    <div class="prev">${prev}</div></div>`;
+    <div class="r1"><span class="from">${esc(m.from_name||m.from_addr||"(unbekannt)")}</span>
+    <span class="mid">${sevBadge(m.sev)}<span class="subj">${esc(m.subject||"(kein Betreff)")}</span><span class="prev"> – ${prev}</span></span>
+    <span class="date">${m.att_count?"📎 ":""}${esc(fmtDate(m.date_ts))}</span></div></div>`;
 }
 async function updateCount(total){
   let h = `${total.toLocaleString("de-DE")} Treffer`;
@@ -635,6 +648,7 @@ function setMode(mode, q){
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("sel", t.dataset.m === mode));
   stopSetupPoll();
   document.querySelector("main").hidden = mode === "setup"; $("#setup").hidden = mode !== "setup";
+  $("#folders").innerHTML = "";
   if(mode === "setup"){ renderSetup(); return; }
   $("#q").placeholder = mode === "marks" ? "Markierungen durchsuchen (Titel, Notiz) …"
     : mode === "people" ? "Name oder Adresse suchen …" : mode === "docs"
@@ -644,6 +658,12 @@ function setMode(mode, q){
   document.body.classList.remove("read");
   loadFolders().then(reload);
 }
+$("#menu").onclick = () => document.body.classList.toggle("noside");
+$("#refresh").onclick = () => reload();
+let lastScroll = 0;                                    // Liste und Lesebereich wechseln sich ab: Position der Liste merken
+$("#list").addEventListener("scroll", () => { if(!document.body.classList.contains("read")) lastScroll = $("#list").scrollTop });
+new MutationObserver(() => { if(!document.body.classList.contains("read")) $("#list").scrollTop = lastScroll })
+  .observe(document.body, {attributes:true, attributeFilter:["class"]});
 document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => { if(state.mode !== t.dataset.m) setMode(t.dataset.m, "") }));   // Suchsyntax gehört zum Tab: beim Wechsel leeren
 
 /* ---------- Einrichtung ---------- */
@@ -790,6 +810,7 @@ async function init(){
     const st = await api("/api/setup/status");
     if(!st.configured || (!st.counts.mails && !st.counts.docs)){ setMode("setup"); return }
   }catch{}
+  api("/api/stats").then(s => { $("#cnt-mail").textContent = s.messages.toLocaleString("de-DE") }).catch(() => {});
   loadFolders().then(reload);
 }
 init();
