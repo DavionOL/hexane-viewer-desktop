@@ -89,3 +89,9 @@ def test_ping_setzt_lebenszeichen(client):
     server.STATE["last_ping"] = None
     assert client.get("/api/ping").json() == {"ok": True}
     assert server.STATE["last_ping"] is not None
+
+
+def test_ordnerauswahl_hat_schnellzugriff(client, tmp_path):
+    d = client.get("/api/fs/list", params={"path": str(tmp_path)}).json()
+    assert d["roots"] and all({"label", "path"} <= set(r) for r in d["roots"])
+    assert client.get("/api/fs/list", params={"path": str(tmp_path / "gibtsnicht")}).status_code == 404

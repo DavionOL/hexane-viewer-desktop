@@ -944,16 +944,31 @@ def jobs_cancel():
     return {"cancelled": jobs.cancel()}
 
 
+def _fs_roots() -> list[dict]:
+    """Schnellzugriff der Ordnerauswahl: Laufwerke (Windows), eingebundene Datenträger (Linux/macOS), Home."""
+    roots = [{"label": "Home", "path": str(Path.home())}]
+    if os.name == "nt":
+        import string
+        roots += [{"label": f"{c}:\\", "path": f"{c}:\\"} for c in string.ascii_uppercase if os.path.exists(f"{c}:\\")]
+        return roots
+    user = os.environ.get("USER") or Path.home().name
+    for base in (f"/run/media/{user}", f"/media/{user}", "/media", "/mnt", "/Volumes"):
+        try:
+            for e in sorted(os.scandir(base), key=lambda e: e.name.lower()):
+                if e.is_dir() and not e.name.startswith(".") and os.path.ismount(e.path):
+                    roots.append({"label": e.name, "path": e.path})
+        except OSError:
+            continue
+    return roots
+
+
 @app.get("/api/fs/list")
 def fs_list(path: str = ""):
     """Ordnerauswahl im Browser-Modus (im Desktop-Fenster gibt es den Dialog des Systems). Nur bei lokalem Betrieb."""
     if STATE["lan"]:
         raise HTTPException(403, "Die Ordnerauswahl ist im Netzwerk-Modus abgeschaltet.")
-    roots = []
+    roots = _fs_roots()
     if not path:
-        if os.name == "nt":
-            import string
-            roots = [f"{c}:\\" for c in string.ascii_uppercase if os.path.exists(f"{c}:\\")]
         path = str(Path.home())
     p = Path(path)
     if not p.is_dir():

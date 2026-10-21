@@ -686,10 +686,14 @@ async function openFolderBrowser(start){
       dlg.innerHTML = `<div class="modal-box"><h3>Ordner wählen</h3>
         <div class="small">${esc(d.path)}${d.looks_like_data ? " · <b>sieht nach dem Datensatz aus</b>" : ""}</div>
         <div class="list">${d.parent ? `<div class="f" style="--d:0" data-p="${esc(d.parent)}">⬆ eine Ebene höher</div>` : ""}
-          ${d.roots.map(r => `<div class="f" style="--d:0" data-p="${esc(r)}">💽 ${esc(r)}</div>`).join("")}
-          ${d.entries.map(e => `<div class="f" style="--d:0" data-p="${esc(e.path)}">📁 ${esc(e.name)}</div>`).join("")}</div>
+          ${d.roots.map(r => `<div class="f" style="--d:0" data-p="${esc(r.path)}">💽 ${esc(r.label)}</div>`).join("")}
+          ${d.entries.map(e => `<div class="f" style="--d:0" data-p="${esc(e.path)}">📁 ${esc(e.name)}</div>`).join("")}
+          ${d.entries.length ? "" : `<div class="small" style="padding:8px">Keine Unterordner. Laufwerke stehen oben (💽); ein Pfad lässt sich auch unten eintippen.</div>`}</div>
+        <div class="row2"><input id="fb-path" placeholder="Pfad eintippen, z. B. /run/media/name/Platte/Hexane" value="${esc(d.path)}" style="flex:1"><button id="fb-go">Gehe zu</button></div>
         <div class="row2"><button id="fb-ok">Diesen Ordner wählen</button><button id="fb-cancel">Abbrechen</button></div></div>`;
       dlg.querySelectorAll("[data-p]").forEach(el => el.onclick = () => load(el.dataset.p));
+      $("#fb-go").onclick = () => load($("#fb-path").value.trim());
+      $("#fb-path").onkeydown = ev => { if(ev.key === "Enter") load($("#fb-path").value.trim()) };
       $("#fb-cancel").onclick = () => dlg.remove();
       $("#fb-ok").onclick = () => { $("#dd").value = cur; dlg.remove(); };
     }catch(e){ dlg.innerHTML = `<div class="modal-box"><div class="bad">${esc(e.message)}</div><button id="fb-cancel">Schließen</button></div>`; $("#fb-cancel").onclick = () => dlg.remove() }
