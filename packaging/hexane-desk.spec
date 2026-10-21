@@ -1,4 +1,6 @@
 # PyInstaller-Spezifikation:  pyinstaller packaging/hexane-desk.spec
+import sys
+
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 datas = collect_data_files("hexane_desk")                 # static/ (Oberfläche) und templates/
@@ -13,5 +15,7 @@ for optional in ("mcp", "webview"):                       # nur einbinden, wenn 
 
 a = Analysis(["entry.py"], pathex=["../src"], datas=datas, hiddenimports=hidden, excludes=["tkinter", "pytest"])
 pyz = PYZ(a.pure)
-exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name="hexane-desk", console=True)
-coll = COLLECT(exe, a.binaries, a.datas, name="hexane-desk")
+exes = [EXE(pyz, a.scripts, [], exclude_binaries=True, name="hexane-desk", console=True)]       # Kommandozeile und MCP (braucht stdio)
+if sys.platform == "win32":                                                                      # Windows: zusätzlich ohne Konsolenfenster
+    exes.append(EXE(pyz, a.scripts, [], exclude_binaries=True, name="hexane-desk-gui", console=False))
+coll = COLLECT(*exes, a.binaries, a.datas, name="hexane-desk")

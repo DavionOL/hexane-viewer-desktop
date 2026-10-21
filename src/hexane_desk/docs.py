@@ -15,7 +15,7 @@ import tempfile
 import zipfile
 from html import unescape
 
-from . import db
+from . import db, tools
 
 TEXT_LIMIT = 2_000_000          # Zeichen je Dokument im Index
 ZIP_MEMBER_LIMIT = 50_000_000   # Bytes je Zip-Eintrag (Schutz vor Zip-Bomben)
@@ -100,15 +100,17 @@ def from_html(path: str) -> str:
     return xml_text(html)
 
 
-def run_cmd(cmd: list[str], timeout: int = 120) -> str:
+def run_cmd(cmd: list[str], timeout: int = 120, env: dict | None = None) -> str:
     try:
-        r = subprocess.run(cmd, capture_output=True, timeout=timeout, stdin=subprocess.DEVNULL)
+        r = subprocess.run(cmd, capture_output=True, timeout=timeout, stdin=subprocess.DEVNULL, env=env,
+                           creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         return r.stdout.decode("utf-8", "replace")
     except Exception:
         return ""
 
 
-HAVE_PDFTOTEXT = bool(shutil.which("pdftotext")) and not os.environ.get("HEXANE_NO_POPPLER")   # Schalter für Tests
+PDFTOTEXT = None if os.environ.get("HEXANE_NO_POPPLER") else tools.find("pdftotext")   # Schalter für Tests
+CATDOC, XLS2CSV, CATPPT = (tools.find(n) for n in ("catdoc", "xls2csv", "catppt"))
 MAX_PDF_PAGES = 400
 
 
@@ -126,8 +128,8 @@ def from_pdf_py(path: str) -> str:
 
 
 def from_pdf(path: str) -> str:
-    if HAVE_PDFTOTEXT:
-        return run_cmd(["pdftotext", "-layout", "-enc", "UTF-8", path, "-"])
+    if PDFTOTEXT:
+        return run_cmd([PDFTOTEXT, "-layout", "-enc", "UTF-8", path, "-"])
     return from_pdf_py(path)
 
 
@@ -136,9 +138,9 @@ EXTRACTORS = {
     "docx": from_docx, "xlsx": from_xlsx, "pptx": from_pptx,
     "odt": from_odf, "ods": from_odf, "odp": from_odf,
     "rtf": from_rtf,
-    "doc": lambda p: run_cmd(["catdoc", "-d", "utf-8", p]),
-    "xls": lambda p: run_cmd(["xls2csv", "-d", "utf-8", p]),
-    "ppt": lambda p: run_cmd(["catppt", "-d", "utf-8", p]),
+    "doc": lambda p: run_cmd([CATDOC, "-d", "utf-8", p]) if CATDOC else "",
+    "xls": lambda p: run_cmd([XLS2CSV, "-d", "utf-8", p]) if XLS2CSV else "",
+    "ppt": lambda p: run_cmd([CATPPT, "-d", "utf-8", p]) if CATPPT else "",
     "txt": from_plain, "csv": from_plain, "tsv": from_plain, "md": from_plain,
     "html": from_html, "htm": from_html,
 }
@@ -236,11 +238,14 @@ def ocr_one(args) -> tuple[int, str]:
     try:
         path = os.path.join(base, rel)
         # lange Seitenkante auf 2600 px begrenzen (A4 ca. 220 dpi); verhindert riesige Bilder bei Plakaten/Plänen
-        run_cmd(["pdftoppm", "-scale-to", "2600", "-gray", "-png", "-l", str(MAX_OCR_PAGES), path,
+        pdftoppm, tesseract = tools.find("pdftoppm"), tools.find("tesseract")
+        if not pdftoppm or not tesseract:
+            return doc_id, ""
+        run_cmd([pdftoppm, "-scale-to", "2600", "-gray", "-png", "-l", str(MAX_OCR_PAGES), path,
                  os.path.join(tmp, "p")], timeout=600)
         texts = []
         for f in sorted(os.listdir(tmp)):
-            texts.append(run_cmd(["tesseract", os.path.join(tmp, f), "-", "-l", "deu+eng"], timeout=300))
+            texts.append(run_cmd([tesseract, os.path.join(tmp, f), "-", "-l", "deu+eng"], timeout=300, env=tools.env_for(tesseract)))
         return doc_id, clean("\n".join(texts))[:TEXT_LIMIT]
     except Exception:
         return doc_id, ""

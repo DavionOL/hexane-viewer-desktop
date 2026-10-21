@@ -1,8 +1,10 @@
 name: Release
-# Baut bei jedem Tag v* ein eigenständiges Programm für Windows, macOS und Linux und hängt es an die GitHub-Release an.
+# Baut ein eigenständiges Programm je System (bei Windows zusätzlich den Installer) und hängt es bei Tags v* an die GitHub-Release an.
+# Von Hand startbar (Actions -> Release -> Run workflow): dann werden die Ergebnisse nur als Artefakte hochgeladen.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -27,14 +29,54 @@ jobs:
       - if: matrix.desktop != ''
         run: pip install ${{ matrix.desktop }}
       - run: pyinstaller --noconfirm packaging/hexane-desk.spec
+
+      - name: Installer bauen (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+          $v = "${{ github.ref_name }}".TrimStart('v')
+          if ($v -notmatch '^\d') { $v = "0.0.0-dev" }
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$v" packaging\windows\hexane-desk.iss
+          Get-ChildItem installer
+
+      - name: Installer testen (Windows) - still installieren, ausführen, deinstallieren
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem installer\HexaneDesk-Setup-*.exe | Select-Object -First 1
+          $dir = Join-Path $env:RUNNER_TEMP "hd"
+          Start-Process -FilePath $setup.FullName -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=$dir" -Wait
+          if (-not (Test-Path "$dir\hexane-desk.exe")) { throw "Konsolenprogramm fehlt" }
+          if (-not (Test-Path "$dir\hexane-desk-gui.exe")) { throw "Fensterprogramm fehlt" }
+          $env:HEXANE_DESK_HOME = Join-Path $env:RUNNER_TEMP "home"
+          & "$dir\hexane-desk.exe" doctor
+          & "$dir\hexane-desk.exe" demo --out (Join-Path $env:RUNNER_TEMP "demo") --mails 60
+          & "$dir\hexane-desk.exe" index --data (Join-Path $env:RUNNER_TEMP "demo")
+          if ($LASTEXITCODE -ne 0) { throw "Einrichtung fehlgeschlagen" }
+          Start-Process -FilePath "$dir\unins000.exe" -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES" -Wait
+          Start-Sleep -Seconds 3
+          if (Test-Path "$dir\hexane-desk.exe") { throw "Deinstallation unvollständig" }
+
       - name: Archiv (Windows)
         if: runner.os == 'Windows'
-        run: Compress-Archive -Path dist/hexane-desk -DestinationPath hexane-desk-${{ matrix.name }}.zip
+        run: Compress-Archive -Path dist/hexane-desk -DestinationPath hexane-desk-${{ matrix.name }}-portable.zip
       - name: Archiv (macOS/Linux)
         if: runner.os != 'Windows'
         run: tar czf hexane-desk-${{ matrix.name }}.tar.gz -C dist hexane-desk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hexane-desk-${{ matrix.name }}
+          path: |
+            hexane-desk-${{ matrix.name }}*.zip
+            hexane-desk-${{ matrix.name }}*.tar.gz
+            installer/HexaneDesk-Setup-*.exe
+          if-no-files-found: error
       - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            hexane-desk-${{ matrix.name }}.zip
-            hexane-desk-${{ matrix.name }}.tar.gz
+            hexane-desk-${{ matrix.name }}*.zip
+            hexane-desk-${{ matrix.name }}*.tar.gz
+            installer/HexaneDesk-Setup-*.exe

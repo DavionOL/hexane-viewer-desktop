@@ -12,3 +12,4 @@ dist/
 # Datensatz und Index gehören nie ins Repository
 demo*/
 daten/
+installer/

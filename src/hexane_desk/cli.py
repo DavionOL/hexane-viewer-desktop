@@ -1,6 +1,7 @@
 """Kommandozeile: hexane-desk [desktop|serve|index|demo|doctor|mcp]"""
 import argparse
 import multiprocessing
+import os
 import socket
 import sys
 import threading
@@ -23,7 +24,8 @@ def _start_server(port: int, lan: bool, password: str):
     from . import server
     server.STATE["lan"] = lan
     server.STATE["password"] = password
-    cfg = uvicorn.Config(server.app, host="0.0.0.0" if lan else "127.0.0.1", port=port, log_level="warning")
+    cfg = uvicorn.Config(server.app, host="0.0.0.0" if lan else "127.0.0.1", port=port, log_level="warning",
+                         log_config=None)             # funktioniert auch ohne Konsole (Windows-Fenster-Programm)
     srv = uvicorn.Server(cfg)
     t = threading.Thread(target=srv.run, daemon=True, name="uvicorn")
     t.start()
@@ -52,7 +54,28 @@ def cmd_serve(a):
         srv.should_exit = True
 
 
+def _webview2_ok() -> bool:
+    """Windows: ist die Edge-WebView2-Laufzeit installiert? (Auf anderen Systemen immer wahr.)"""
+    if os.name != "nt":
+        return True
+    import winreg
+    guid = "Microsoft\\EdgeUpdate\\Clients\\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+    for hive, path in ((winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\" + guid), (winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\" + guid),
+                       (winreg.HKEY_CURRENT_USER, "Software\\" + guid)):
+        try:
+            with winreg.OpenKey(hive, path) as k:
+                v = winreg.QueryValueEx(k, "pv")[0]
+                if v and v != "0.0.0.0":
+                    return True
+        except OSError:
+            continue
+    return False
+
+
 def cmd_desktop(a):
+    if not _webview2_ok():
+        print("Die Edge-WebView2-Laufzeit fehlt (nötig für das Programmfenster). Ich starte stattdessen den Browser-Modus.", flush=True)
+        return cmd_serve(a)
     try:
         import webview
     except ImportError:

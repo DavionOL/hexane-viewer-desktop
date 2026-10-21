@@ -845,7 +845,9 @@ def _nearest_existing(p: Path) -> Path:
 def mcp_config() -> dict:
     """Eintrag für die Konfiguration eines KI-Clients (z. B. Claude Desktop) mit dem echten Programmpfad."""
     if getattr(sys, "frozen", False):
-        cmd = sys.executable
+        exe = Path(sys.executable)
+        cli = exe.with_name("hexane-desk" + exe.suffix)          # das Konsolenprogramm; das Fensterprogramm hat kein stdio
+        cmd = str(cli if cli.exists() else exe)
     else:
         cmd = shutil.which("hexane-desk") or "hexane-desk"
     return {"mcpServers": {"hexane": {"command": cmd, "args": ["mcp"]}}}

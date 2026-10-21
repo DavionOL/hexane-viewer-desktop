@@ -4,7 +4,6 @@ Der Datensatz hat folgende Teile (jeweils auch doppelt verschachtelt, z. B. 01_E
 01_EMAIL, 02_DATABASES, 03_DOCUMENTS, 04_TABULAR_DATA, 05_CREDENTIALS_AND_KEYS, 06_MEDIA, 99_FOR_JOURNALISTS, _root.
 """
 import os
-import shutil
 from pathlib import Path
 
 PARTS = ["01_EMAIL", "02_DATABASES", "03_DOCUMENTS", "04_TABULAR_DATA", "06_MEDIA", "99_FOR_JOURNALISTS"]
@@ -107,9 +106,5 @@ def _detect(root: str | Path) -> dict:
 
 def capabilities() -> dict:
     """Optionale Hilfsprogramme: verbessern Qualität oder Geschwindigkeit, sind aber nicht nötig."""
-    return {
-        "pdftotext": bool(shutil.which("pdftotext")),
-        "pdftoppm": bool(shutil.which("pdftoppm")),
-        "tesseract": bool(shutil.which("tesseract")),
-        "catdoc": bool(shutil.which("catdoc")),
-    }
+    from . import tools
+    return {n: bool(tools.find(n)) for n in ("pdftotext", "pdftoppm", "tesseract", "catdoc")}
