@@ -66,7 +66,9 @@ jobs:
         run: Compress-Archive -Path dist/hexane-desk -DestinationPath hexane-desk-${{ matrix.name }}-portable.zip
       - name: Archiv (macOS/Linux)
         if: runner.os != 'Windows'
-        run: tar czf hexane-desk-${{ matrix.name }}.tar.gz -C dist hexane-desk
+        run: |
+          if [ "${{ matrix.name }}" = linux ]; then cp packaging/linux/install.sh dist/hexane-desk/install.sh; fi
+          tar czf hexane-desk-${{ matrix.name }}.tar.gz -C dist hexane-desk
 
       - name: Prüfsummen (Windows)
         if: runner.os == 'Windows'

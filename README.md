@@ -20,7 +20,12 @@ rund 421.000 Mails und 48.700 Dokumente, 281 GB) vorliegen haben.
 **Windows:** unter *Releases* `HexaneDesk-Setup-<Version>.exe` laden und starten. Der Installer benötigt keine Administratorrechte und
 kein vorinstalliertes Python; er prüft Microsoft Edge WebView2 und bietet auf Wunsch OCR (Tesseract, Poppler) an.
 
-**macOS, Linux:** unter *Releases* das Archiv für das eigene System laden, entpacken, `hexane-desk` starten.
+**Linux:** unter *Releases* `hexane-desk-linux.tar.gz` laden, entpacken und im entpackten Ordner `./install.sh` ausführen. Danach steht
+**„Hexane Desk" im Anwendungsmenü** (ohne Administratorrechte, nach `~/.local/opt`). Ein Klick öffnet das Programm im Browser; ein zweiter
+Klick öffnet nur den Tab, und wenn der Tab geschlossen wird, beendet sich das Programm von selbst (nicht, solange Einrichtungsschritte laufen).
+Bei Installation mit pip/pipx genügt `hexane-desk install-launcher`.
+
+**macOS:** unter *Releases* das Archiv laden, entpacken, `hexane-desk` starten.
 macOS warnt bei nicht signierten Programmen (Rechtsklick → „Öffnen", oder `xattr -dr com.apple.quarantine hexane-desk`).
 
 **Mit Python (3.11 oder neuer):**

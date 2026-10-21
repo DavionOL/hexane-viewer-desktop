@@ -82,3 +82,10 @@ def test_people_and_donations(client):
     assert client.get("/api/people/detail", params={"addr": "buerger.eins@gmx.de"}).status_code == 404
     d = client.get("/api/donations/summary").json()
     assert d["total"] > 0 and d["parsed"] == d["total"]
+
+
+def test_ping_setzt_lebenszeichen(client):
+    from hexane_desk import server
+    server.STATE["last_ping"] = None
+    assert client.get("/api/ping").json() == {"ok": True}
+    assert server.STATE["last_ping"] is not None

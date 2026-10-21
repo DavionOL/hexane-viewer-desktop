@@ -24,7 +24,7 @@ from .categories import BY_KEY, CATEGORIES, SEVERITY_LABELS, VERIFIED_LABELS
 from .junk import DOC_COND, DOC_GROUPS, MAIL_GROUPS, MAIL_KEYS
 
 STATIC = os.path.join(os.path.dirname(__file__), "static")
-STATE = {"lan": False, "password": ""}          # wird von der Kommandozeile gesetzt (hexane-desk serve --lan)
+STATE = {"lan": False, "password": "", "last_ping": None}          # wird von der Kommandozeile gesetzt (hexane-desk serve --lan)
 LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
 @asynccontextmanager
@@ -145,6 +145,13 @@ def parse_query(q: str):
         else:
             fts.append(fq(val))
     return fts, where, args
+
+
+@app.get("/api/ping")
+def ping():
+    """Lebenszeichen der geöffneten Seite (der Starter beendet das Programm, wenn sie ausbleiben)."""
+    STATE["last_ping"] = time.time()
+    return {"ok": True}
 
 
 @app.get("/api/stats")

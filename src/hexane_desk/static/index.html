@@ -774,6 +774,8 @@ async function init(){
   loadFolders().then(reload);
 }
 init();
+setInterval(()=>fetch('/api/ping').catch(()=>{}), 5000);   // Lebenszeichen für den Starter (beendet das Programm, wenn der Tab zu ist)
+fetch('/api/ping').catch(()=>{});
 </script>
 </body>
 </html>

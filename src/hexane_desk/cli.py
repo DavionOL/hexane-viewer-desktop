@@ -1,4 +1,4 @@
-"""Kommandozeile: hexane-desk [desktop|serve|index|demo|doctor|mcp]"""
+"""Kommandozeile: hexane-desk [desktop|serve|launch|install-launcher|index|demo|doctor|mcp]"""
 import argparse
 import multiprocessing
 import os
@@ -52,6 +52,34 @@ def cmd_serve(a):
             time.sleep(1)
     except KeyboardInterrupt:
         srv.should_exit = True
+
+
+def cmd_launch(a):
+    """Für den Programm-Starter: ein Klick öffnet den Browser; zweiter Klick öffnet nur den Tab; Ende, wenn der Tab zu ist."""
+    from . import jobs, launcher, server
+    url = launcher.find_running()
+    if url:
+        webbrowser.open(url)
+        return
+    port = _free_port(config.settings().port)
+    srv = _start_server(port, False, "")
+    url = f"http://127.0.0.1:{port}/?t={config.TOKEN}"
+    launcher.remember(url, port)
+    webbrowser.open(url)
+    try:
+        launcher.wait_until_closed(server.STATE, lambda: jobs.running() is not None)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        launcher.forget()
+        srv.should_exit = True
+
+
+def cmd_install_launcher(a):
+    if sys.platform != "linux":
+        sys.exit("Der Programm-Starter wird nur unter Linux angelegt (Windows: Installer, macOS: Programm in den Ordner „Programme\" ziehen).")
+    from . import launcher
+    print(f"Starter angelegt: {launcher.install_linux()}\nJetzt im Anwendungsmenü nach „Hexane Desk\" suchen.")
 
 
 def _webview2_ok() -> bool:
@@ -150,6 +178,8 @@ def main(argv=None):
         sp.add_argument("--lan", action="store_true", help="auch im Netzwerk erreichbar (nur mit Passwort)")
         sp.add_argument("--password", default="")
         sp.set_defaults(fn=fn)
+    sub.add_parser("launch", help="Starter-Modus: Browser öffnen, Ende wenn der Tab geschlossen wird").set_defaults(fn=cmd_launch)
+    sub.add_parser("install-launcher", help="Linux: Eintrag im Anwendungsmenü anlegen").set_defaults(fn=cmd_install_launcher)
     sp = sub.add_parser("index", help="Datensatz ohne Oberfläche einlesen")
     sp.add_argument("--data", help="Wurzelordner des Datensatzes")
     sp.add_argument("--steps", nargs="*", help="Schritte (Standard: alle empfohlenen)")
