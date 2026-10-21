@@ -133,8 +133,7 @@ begin
           if DownloadPage.AbortedByUser then
             Log('Download vom Benutzer abgebrochen')
           else
-            SuppressibleMsgBox('Der Download ist fehlgeschlagen oder die Prüfsumme stimmt nicht:' + #13#10 + GetExceptionMessage +
-              #13#10#13#10 + 'Sie können die optionalen Punkte abwählen und trotzdem installieren.', mbError, MB_OK, IDOK);
+            SuppressibleMsgBox('Der Download ist fehlgeschlagen oder die Prüfsumme stimmt nicht:' + #13#10 + GetExceptionMessage + #13#10#13#10 + 'Sie können die optionalen Punkte abwählen und trotzdem installieren.', mbError, MB_OK, IDOK);
           Result := False;
         end;
       finally

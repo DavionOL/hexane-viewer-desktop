@@ -38,6 +38,7 @@ jobs:
           $v = "${{ github.ref_name }}".TrimStart('v')
           if ($v -notmatch '^\d') { $v = "0.0.0-dev" }
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$v" packaging\windows\hexane-desk.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC fehlgeschlagen" }
           Get-ChildItem installer
 
       - name: Installer testen (Windows) - still installieren, ausführen, deinstallieren
