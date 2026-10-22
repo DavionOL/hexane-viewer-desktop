@@ -134,6 +134,11 @@ def _donations(ctx):
     donations.main(ctx=ctx)
 
 
+def _authstats(ctx):
+    from . import authstats
+    authstats.main(ctx=ctx)
+
+
 STEPS: dict[str, Step] = {s.key: s for s in [
     Step("mails", "Mails einlesen", "Liest alle Mailboxen in den Suchindex (dauert bei 210 GB mehrere Stunden, kann unterbrochen werden).",
          _mails, part="01_EMAIL"),
@@ -150,6 +155,9 @@ STEPS: dict[str, Step] = {s.key: s for s in [
          _junk, needs=("mails",)),
     Step("donations", "Spenden-Übersicht", "Liest Datum und Betrag aus PayPal-Spendenmeldungen (keine Namen).",
          _donations, needs=("mails",), optional=True),
+    Step("authstats", "Echtheits-Statistik", "Zählt je Postfach, wie viele Mails eine DKIM-Signatur tragen und ob deren Hash zum Text passt "
+         "(liest die Mails noch einmal, dauert etwa so lange wie eine Teilmenge des Imports).",
+         _authstats, part="01_EMAIL", needs=("mails",), optional=True),
 ]}
 RECOMMENDED = ["mails", "docs", "docmeta", "lists", "people", "junk", "donations"]
 

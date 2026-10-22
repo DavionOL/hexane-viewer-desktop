@@ -5,7 +5,7 @@ rund 421.000 Mails und 48.700 Dokumente, 281 GB) vorliegen haben.
 
 - **Volltextsuche** in Mails und Dokumenten (SQLite/FTS5), mit Suchsyntax und klickbaren **Recherche-Kategorien**
 - **Bewertung** einzelner Funde (Stufe 1–5, Prüfstatus, Notiz) und **Top-100-Export** (Markdown/CSV)
-- **Header-Ansicht** zur Echtheitseinschätzung von Mails (SPF/DKIM/DMARC-Angaben, Received-Kette, Hinweise)
+- **Header-Ansicht und Echtheitsbericht** für Mails: DKIM-Signatur (auf Wunsch mit Schlüssel aus dem DNS), Zustellweg, Verweise im Datensatz, Anhänge mit Prüfsumme und Metadaten, SHA-256 und Fundort für die Dokumentation. Ergebnisse sind Indizien, keine Beweise ([docs/ECHTHEIT.md](docs/ECHTHEIT.md))
 - **Trash ausblenden**: Zustellfehler, Auto-Antworten, Newsletter, Shop-/PayPal-Meldungen, soziale Netzwerke u. a. in wählbaren Gruppen
 - **Adressen mit Datensparsamkeit**: öffentliche Akteure mit Quelle, Parteidomains nur als Zähler, alle anderen nur je Domain
 - **Spenden-Übersicht** aus PayPal-Meldungen ohne Namen (Anzahl, Summen, Verteilung, Spitzentage)
@@ -85,6 +85,7 @@ maskiert und es gibt nur lesende Werkzeuge.
 
 - [docs/DATENSATZ.md](docs/DATENSATZ.md): Aufbau des Datensatzes, Besonderheiten, Erfahrungswerte
 - [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md): Aufbau des Programms und Entwurfsentscheidungen
+- [docs/ECHTHEIT.md](docs/ECHTHEIT.md): Echtheitsprüfung von Mails, Möglichkeiten und Grenzen
 - [docs/MCP.md](docs/MCP.md): KI-Anbindung
 - [docs/SICHERHEIT.md](docs/SICHERHEIT.md): Bedrohungsmodell und Hinweise
 

@@ -5,7 +5,7 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 datas = collect_data_files("hexane_desk")                 # static/ (Oberfläche) und templates/
 hidden = collect_submodules("uvicorn") + collect_submodules("hexane_desk")
-for optional in ("mcp", "webview"):                       # nur einbinden, wenn installiert
+for optional in ("mcp", "webview", "dkim", "dns"):                       # nur einbinden, wenn installiert
     try:
         __import__(optional)
         hidden += collect_submodules(optional, filter=lambda n: not n.startswith("mcp.cli"))   # mcp.cli braucht ein Zusatzpaket

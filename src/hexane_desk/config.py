@@ -24,6 +24,7 @@ class Settings:
     mask_external: bool = True    # MCP: Adressen Außenstehender maskieren
     allow_write: bool = False     # MCP: Schreib-Werkzeuge (Markierungen) erlauben
     lists_consent: bool = False   # Listen (abgeordnetenwatch, FragDenStaat) dürfen aus dem Internet geladen werden
+    dns_consent: bool = False     # Echtheitsprüfung darf DNS-Abfragen für DKIM-Schlüssel stellen (Domain und Selector gehen ins Internet)
     party_patterns: str = "afd|alternativefuer|alternative-fuer"   # reguläres Muster für Domains der Partei (Stufe 2)
 
 

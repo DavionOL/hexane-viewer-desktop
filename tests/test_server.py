@@ -99,3 +99,24 @@ def test_ordnerauswahl_hat_schnellzugriff(client, tmp_path):
 
 def test_oberflaeche_wird_nicht_gecacht(client):
     assert client.get("/").headers["cache-control"] == "no-cache"
+
+
+def test_echtheitsbericht_endpoint(client):
+    mid = client.get("/api/messages", params={"limit": 1}).json()["items"][0]["id"]
+    rep = client.get(f"/api/messages/{mid}/authenticity").json()
+    assert len(rep["sha256"]) == 64 and rep["checks"] and rep["location"]["file"]
+    assert "Beweise" in rep["note"]
+    assert client.get(f"/api/messages/{mid}/authenticity", params={"online": 1}).status_code == 403   # ohne Zustimmung kein DNS
+    md = client.get(f"/api/messages/{mid}/authenticity", params={"fmt": "md"})
+    assert md.headers["content-type"].startswith("text/markdown") and rep["sha256"] in md.text
+    assert client.get("/api/messages/99999999/authenticity").status_code == 404
+
+
+def test_echtheits_statistik_schritt(client):
+    from hexane_desk import authstats, db
+    authstats.main()
+    conn = db.connect()
+    assert conn.execute("SELECT COUNT(*) FROM auth_stats").fetchone()[0] == 120
+    s = client.get("/api/forensics/stats").json()
+    assert s["total"]["n"] == 120 and s["folders"]
+    authstats.main()                                                    # zweiter Lauf: nichts mehr zu tun

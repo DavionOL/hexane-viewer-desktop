@@ -76,6 +76,9 @@ iframe{width:100%;height:70vh;border:0;background:#fff}
 .hint a{color:var(--accent)}
 .bar a{text-decoration:none}
 /* Bewertung */
+.lv{display:inline-block;min-width:20px;text-align:center;font-weight:700;margin-right:6px;color:var(--c)}
+.lv-ok{--c:#1e8e3e}.lv-warn{--c:#cc6a12}.lv-bad{--c:#d0401f}.lv-info,.lv-na{--c:#6b7a90}
+.vd{display:inline-block;padding:2px 12px;border-radius:12px;font-weight:700;color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent)}
 .sev{--c:#7a8aa0;display:inline-block;padding:0 8px;margin-right:8px;border-radius:8px;font-size:12px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent)}
 .sev::before{content:"● "}
 .s1{--c:#6b7a90}.s2{--c:#a47d0c}.s3{--c:#cc6a12}.s4{--c:#d0401f}.s5{--c:#b0123a}
@@ -434,9 +437,10 @@ async function openMsg(id){
         ${m.cc_addrs?`<div class="row"><b>Cc:</b> ${esc(m.cc_addrs)}</div>`:""}
         <div class="row"><b>Datum:</b> ${esc(fmtDate(m.date_ts))} · <b>Ordner:</b> ${esc(m.folder)}</div></div>
       <div class="bar"><button id="back" class="onlymobile">← Liste</button>
-        ${m.has_html?`<button id="tg">HTML-Ansicht</button>`:""}<button id="hdr" title="Header zur Echtheitsprüfung">Header</button></div>
+        ${m.has_html?`<button id="tg">HTML-Ansicht</button>`:""}<button id="hdr" title="Header zur Echtheitsprüfung">Header</button><button id="auth" title="Echtheitsbericht: Signatur, Zustellweg, Hashes, Anhänge">Echtheit</button></div>
       ${markPanel()}
       <div id="hdrbox" class="mk hdrbox" hidden></div>
+      <div id="authbox" class="mk hdrbox" hidden></div>
       <div id="content" class="body">${esc(m.body_text)}</div>
       ${atts?`<div class="att">${atts}</div>`:""}
       ${th?`<div class="th"><b>Verlauf</b>${th}</div>`:""}`;
@@ -450,7 +454,7 @@ async function openMsg(id){
     };
     r.querySelectorAll(".th .ti:not(.cur)").forEach(t => t.onclick = () => openMsg(+t.dataset.id));
     initMark("mail", id);
-    initHeaders(id);
+    initHeaders(id); initAuth(id);
   }catch(e){ r.innerHTML = `<div class="empty">${esc(e.message)}</div>` }
 }
 
@@ -495,6 +499,38 @@ async function openMark(m){
 
 /* ---------- Adressen ---------- */
 /* ---------- Header (Echtheitsprüfung) ---------- */
+const LV = {ok:"✔", warn:"⚠", bad:"✖", info:"•", na:"?"};
+function initAuth(id){
+  const btn = $("#auth"), box = $("#authbox");
+  if(!btn || !box) return;
+  const show = async online => {
+    box.hidden = false; box.innerHTML = `<span class="small">${online ? "prüfe online (DNS-Abfragen) …" : "prüfe …"}</span>`;
+    try{
+      const r = await api(`/api/messages/${id}/authenticity${online ? "?online=1" : ""}`);
+      const dk = r.dkim.length ? `<table class="tbl"><tr><th>Domain</th><th>Selector</th><th>Text passt zum Hash</th><th>Signatur mit Schlüssel</th></tr>${r.dkim.map(d =>
+        `<tr><td>${esc(d.domain)}</td><td>${esc(d.selector)}</td><td>${{match:"ja", mismatch:"<b>nein</b>", unsupported:"nicht prüfbar"}[d.body_hash]}</td><td>${{valid:"<b>gültig</b>", invalid:"<b>ungültig</b>", nokey:"Schlüssel nicht abrufbar", unavailable:"nicht möglich"}[d.signature] || "nicht geprüft"}</td></tr>`).join("")}</table>` : "";
+      const att = r.attachments.length ? `<details style="margin-top:6px"><summary>${r.attachments.length} Anhang/Anhänge mit Prüfsumme</summary><table class="tbl">${r.attachments.map(a =>
+        `<tr><td>${esc(a.name)}</td><td>${fmtSize(a.size)}</td><td><code>${a.sha256.slice(0, 16)}…</code></td><td>${esc([a.program, a.created ? "erstellt " + a.created.slice(0, 10) : ""].filter(Boolean).join(", "))}</td></tr>`).join("")}</table></details>` : "";
+      box.innerHTML = `<b>Echtheitsbericht</b> <span class="vd lv-${r.verdict === "ok" ? "ok" : r.verdict === "bad" ? "bad" : r.verdict === "warn" ? "warn" : "info"}" style="margin-left:8px">${esc(r.verdict_text)}</span>
+        <ul style="list-style:none;padding-left:0">${r.checks.map(c => `<li><span class="lv lv-${c.level}">${LV[c.level]}</span><b>${esc(c.title)}</b>${c.detail ? `<div class="small" style="margin-left:26px">${esc(c.detail)}</div>` : ""}</li>`).join("")}</ul>
+        ${dk}${att}
+        <div class="small" style="margin-top:8px">SHA-256 der Roh-Mail: <code>${r.sha256}</code> (${fmtSize(r.size)})<br>Fundort: <code>${esc(r.location.file)}</code>, Offset/Länge <code>${esc(r.location.key)}</code></div>
+        <div class="row2" style="margin-top:8px">
+          ${r.online_possible ? `<button id="auth-online">${r.dns_consent ? "Signatur online prüfen (DNS)" : "Signatur online prüfen …"}</button>` : `<span class="small">Für die Online-Prüfung wird das Paket dkimpy gebraucht.</span>`}
+          <a href="/api/messages/${id}/authenticity?fmt=md"><button>Bericht als Markdown</button></a></div>
+        <div class="small" style="margin-top:6px">${esc(r.note)}</div>`;
+      const ob = $("#auth-online");
+      if(ob) ob.onclick = async () => {
+        if(!r.dns_consent){
+          if(!confirm("Für die Prüfung fragt das Programm bei dieser Mail den öffentlichen DKIM-Schlüssel im DNS ab. Dabei gehen nur die Absender-Domain und der Selector ins Internet, nicht der Inhalt. Erlauben?")) return;
+          try{ await postJson("/api/setup/config", {dns_consent: true}) }catch(e){ alert(e.message); return }
+        }
+        show(true);
+      };
+    }catch(e){ box.innerHTML = `<span class="small">Fehler: ${esc(e.message)}</span>` }
+  };
+  btn.onclick = () => { if(!box.hidden){ box.hidden = true; return } show(false) };
+}
 function initHeaders(id){
   const btn = $("#hdr"), box = $("#hdrbox");
   if(!btn || !box) return;
@@ -757,8 +793,10 @@ async function renderSetup(){
       <div class="small">Speicherort: <code>${esc(st.index_path)}</code> · aktuell ${fmtBytes(st.index_bytes)} · frei: ${fmtBytes(st.free_bytes)}.
         Für den vollständigen Datensatz sind rund 6 bis 10 GB und mehrere Stunden Rechenzeit nötig. Jeder Schritt lässt sich abbrechen und später fortsetzen.</div>
       <label class="chk"><input type="checkbox" id="opt-lists" ${st.settings.lists_consent ? "checked" : ""}> Öffentliche Referenzlisten aus dem Internet laden (abgeordnetenwatch.de, FragDenStaat) für die Einstufung der Adressen</label>
+      <label class="chk"><input type="checkbox" id="opt-dns" ${st.settings.dns_consent ? "checked" : ""}> Bei der Echtheitsprüfung DKIM-Schlüssel per DNS abfragen (nur Domain und Selector gehen ins Internet)</label>
     </div>
     <div class="card" id="steps-card"><h3>3. Schritte</h3><div id="steps-body"></div></div>
+    <div class="card" id="auth-card" hidden><h3>Echtheits-Statistik (DKIM je Postfach)</h3><div id="auth-body"></div></div>
     <div class="card"><h3>Optionale Hilfsprogramme</h3>
       <div>${Object.entries(ov.capabilities).map(([k, v]) => `<span class="sev ${v ? "s1" : "s3"}">${v ? "✓" : "✗"} ${esc(k)}</span>`).join(" ")}</div>
       <div class="small">Ohne diese Programme nutzt Hexane Desk eingebaute Verfahren. pdftotext/pdftoppm (Poppler) beschleunigen die PDF-Erkennung, tesseract ermöglicht OCR für Scans, catdoc liest alte .doc/.xls-Dateien.</div>
@@ -772,8 +810,17 @@ async function renderSetup(){
     </div>
     <div class="small">Eigene Listen (<code>junk_domains.txt</code>, <code>extra_public_figures.txt</code>) liegen in <code>${esc(st.lists_dir)}</code>.</div></div>`;
   $("#steps-body").innerHTML = stepsHtml(st); wireSteps();
+  api("/api/forensics/stats").then(s => {
+    if(!s.folders.length) return;
+    const pct = (a, b) => b ? Math.round(100 * a / b) + " %" : "–";
+    $("#auth-card").hidden = false;
+    $("#auth-body").innerHTML = `<div class="small">Anteil der Mails, deren DKIM-Signatur zum Text passt (ohne Schlüsselprüfung), und was der Empfangsserver damals eingetragen hat. Eine Signatur ist ein Anker: Wo viele Mails eine tragen, lässt sich die Herkunft besser belegen. Wo keine vorhanden ist, beweist das nichts.</div>
+      <table class="tbl"><tr><th>Postfach</th><th>Mails</th><th>mit Signatur</th><th>Hash passt</th><th>dkim=pass laut Server</th><th>dkim=fail</th></tr>
+      ${s.folders.map(f => `<tr><td>${esc(f.folder)}</td><td>${f.n.toLocaleString("de-DE")}</td><td>${pct(f.signed, f.n)}</td><td>${pct(f.hash_ok, f.n)}</td><td>${pct(f.ar_pass, f.n)}</td><td>${f.ar_fail.toLocaleString("de-DE")}</td></tr>`).join("")}
+      <tr><td><b>Gesamt</b></td><td><b>${s.total.n.toLocaleString("de-DE")}</b></td><td>${pct(s.total.signed, s.total.n)}</td><td>${pct(s.total.hash_ok, s.total.n)}</td><td>${pct(s.total.ar_pass, s.total.n)}</td><td>${s.total.ar_fail.toLocaleString("de-DE")}</td></tr></table>`;
+  }).catch(() => {});
   const setOpt = (id, key) => $(id).onchange = async e => { try{ await postJson("/api/setup/config", {[key]: e.target.checked}) }catch(x){ alert(x.message) } };
-  setOpt("#opt-lists", "lists_consent"); setOpt("#opt-mask", "mask_external"); setOpt("#opt-write", "allow_write");
+  setOpt("#opt-lists", "lists_consent"); setOpt("#opt-dns", "dns_consent"); setOpt("#opt-mask", "mask_external"); setOpt("#opt-write", "allow_write");
   $("#dd-pick").onclick = async () => {
     const native = window.pywebview && window.pywebview.api && window.pywebview.api.choose_folder;
     if(native){ const p = await window.pywebview.api.choose_folder(); if(p) $("#dd").value = p }

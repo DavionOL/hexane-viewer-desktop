@@ -115,6 +115,15 @@ CREATE TABLE IF NOT EXISTS steps (
     info        TEXT
 );
 
+-- Echtheits-Statistik (authstats.py): nur Zähler und Prüfergebnisse je Mail, kein Text
+CREATE TABLE IF NOT EXISTS auth_stats (
+    msg_id  INTEGER PRIMARY KEY,
+    sigs    INTEGER DEFAULT 0,          -- Anzahl DKIM-Signaturen
+    bh_ok   INTEGER DEFAULT 0,          -- davon: Hash passt zum Text
+    ar_dkim TEXT, ar_spf TEXT, ar_dmarc TEXT,   -- Ergebnis laut Authentication-Results des Empfangsservers
+    skipped INTEGER DEFAULT 0           -- zu groß oder nicht lesbar
+);
+
 -- Spenden-Übersicht (app/donations.py): nur Datum und Betrag aus PayPal-Spendenmeldungen. Bewusst KEINE Namen,
 -- Adressen oder Texte; die Mail-ID dient nur der Entdoppelung.
 CREATE TABLE IF NOT EXISTS donations (

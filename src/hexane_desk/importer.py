@@ -374,6 +374,24 @@ def load_raw_bytes(source_path: str, mbox_key, root: str, limit: int = 262144) -
         return f.read(limit)
 
 
+def load_full(source_path: str, mbox_key, root: str, limit: int = 60 * 1024 * 1024) -> tuple[str, bytes]:
+    """Die komplette Original-Mail als Bytes (für die Echtheitsprüfung) und die mbox-Trennzeile ('From …')."""
+    base = os.path.abspath(root)
+    full = os.path.normpath(os.path.join(base, source_path))
+    if not full.startswith(base + os.sep):
+        raise ValueError("Pfad ausserhalb des Rohdaten-Verzeichnisses")
+    with open(full, "rb") as f:
+        if mbox_key is None:
+            return "", f.read(limit)
+        off, ln = (int(x) for x in str(mbox_key).split(":"))
+        if ln > limit:
+            raise ValueError("Mail zu groß für die Prüfung")
+        f.seek(off)
+        data = f.read(ln)
+    first, _, rest = data.partition(b"\n")
+    return first.decode("latin-1").strip(), rest
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         sys.exit("Aufruf: python -m app.importer <verzeichnis>")

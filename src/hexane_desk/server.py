@@ -19,7 +19,7 @@ from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import __version__, config, datasets, db, importer, jobs
+from . import __version__, authenticity, authstats, config, datasets, db, importer, jobs
 from .categories import BY_KEY, CATEGORIES, SEVERITY_LABELS, VERIFIED_LABELS
 from .junk import DOC_COND, DOC_GROUPS, MAIL_GROUPS, MAIL_KEYS
 
@@ -339,6 +339,38 @@ def message_headers(mid: int):
             "received": received, "hints": hints,
             "note": "Header lassen sich fälschen, und Signaturen älterer Mails können heute nicht mehr geprüft werden "
                     "(Schlüssel rotiert). Dieser Abschnitt zeigt nur, was in der Datei steht."}
+
+
+@app.get("/api/messages/{mid}/authenticity")
+def message_authenticity(mid: int, online: int = 0, fmt: str = ""):
+    """Echtheitsbericht (Indizien, keine Beweise). online=1 holt DKIM-Schlüssel per DNS und braucht die Zustimmung des Nutzers."""
+    if online and not config.settings().dns_consent:
+        raise HTTPException(403, "Für die Online-Prüfung fehlt die Zustimmung (Einstellung dns_consent).")
+    conn = db.connect()
+    r = conn.execute("SELECT source_path, mbox_key, thread_id, subject FROM messages WHERE id = ?", (mid,)).fetchone()
+    if not r:
+        raise HTTPException(404)
+    try:
+        from_line, data = importer.load_full(r["source_path"], r["mbox_key"], raw_root())
+    except (OSError, ValueError) as e:
+        raise HTTPException(404, f"Originaldatei nicht lesbar ({e})")
+    rep = authenticity.analyze(data, from_line, conn, mid, r["thread_id"], online=bool(online),
+                               location={"file": r["source_path"], "key": r["mbox_key"]})
+    if fmt == "md":
+        return Response(authenticity.to_markdown(rep, r["subject"] or ""), media_type="text/markdown; charset=utf-8",
+                        headers={"Content-Disposition": f'attachment; filename="echtheitsbericht-{mid}.md"'})
+    import importlib.util
+    rep["online_possible"] = importlib.util.find_spec("dkim") is not None
+    rep["dns_consent"] = config.settings().dns_consent
+    return rep
+
+
+@app.get("/api/forensics/stats")
+def forensics_stats():
+    conn = db.connect()
+    if not conn.execute("SELECT 1 FROM auth_stats LIMIT 1").fetchone():
+        return {"folders": [], "total": {}}
+    return authstats.summary(conn)
 
 
 # ---------- Spenden-Übersicht (ohne Namen) ----------
@@ -882,7 +914,7 @@ def setup_status(refresh: int = 0):
         "counts": counts,
         "version": __version__, "configured": bool(root and root.is_dir()), "data_dir": s.data_dir,
         "index_path": str(idx), "index_bytes": idx.stat().st_size if idx.exists() else 0, "free_bytes": free,
-        "settings": {"mask_external": s.mask_external, "allow_write": s.allow_write, "lists_consent": s.lists_consent},
+        "settings": {"mask_external": s.mask_external, "allow_write": s.allow_write, "lists_consent": s.lists_consent, "dns_consent": s.dns_consent},
         "detect": datasets.detect(root, fresh=bool(refresh)) if root else None,
         "overview": jobs.overview(), "lists_dir": str(config.lists_dir()), "lan": STATE["lan"],
         "mcp_config": mcp_config(),
@@ -903,7 +935,7 @@ async def setup_config(request: Request):
         changes["data_dir"] = str(Path(d).resolve()) if d else ""
     if "index_dir" in body:
         changes["index_dir"] = str(body["index_dir"] or "").strip()
-    for k in ("lists_consent", "mask_external", "allow_write"):
+    for k in ("lists_consent", "mask_external", "allow_write", "dns_consent"):
         if k in body:
             changes[k] = bool(body[k])
     if jobs.running() and ("data_dir" in changes or "index_dir" in changes):

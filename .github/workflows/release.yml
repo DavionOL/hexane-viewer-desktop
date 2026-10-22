@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install --upgrade pip
-      - run: pip install -e ".[mcp]" pyinstaller
+      - run: pip install -e ".[mcp,forensics]" pyinstaller
       - if: matrix.desktop != ''
         run: pip install ${{ matrix.desktop }}
       - run: pyinstaller --noconfirm packaging/hexane-desk.spec
