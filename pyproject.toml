@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hexane-desk"
-version = "0.1.0"
+version = "0.2.0"
 description = "Lokales Recherche-Werkzeug für den hexane-Datensatz: Suche, Dokumente, Bewertung, MCP-Anbindung (Desktop und Browser)"
 readme = "README.md"
 requires-python = ">=3.11"
